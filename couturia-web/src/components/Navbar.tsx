@@ -28,7 +28,7 @@ export function Navbar() {
   const buttonRef = useRef<HTMLButtonElement>(null)
   const location = useLocation()
   const { count } = useFavorites()
-  const { canInstall, isStandalone, openInstall, openBanner } = usePwaInstall()
+  const { canNativeInstall, isStandalone, openInstall, openBanner } = usePwaInstall()
 
   useEffect(() => {
     setMenuOpen(false)
@@ -182,7 +182,7 @@ export function Navbar() {
                   className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-heading hover:bg-page"
                   onClick={() => {
                     setMenuOpen(false)
-                    if (canInstall) {
+                    if (canNativeInstall) {
                       void openInstall()
                     } else {
                       openBanner()

@@ -7,21 +7,27 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import {
+  APP_VERSION,
+  INSTALL_DISMISS_UNTIL_KEY,
+  SEEN_VERSION_KEY,
+} from '@/lib/release'
 
 export type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>
 }
 
-const DISMISS_UNTIL_KEY = 'couturia.pwa.installDismissUntil'
-const DISMISS_DAYS = 3
+const DISMISS_DAYS = 2
+const INSTALL_HINT_VERSION_KEY = 'couturia.pwa.installHintVersion'
 
 type PwaInstallContextValue = {
-  canInstall: boolean
+  canNativeInstall: boolean
   isStandalone: boolean
   isIos: boolean
   bannerVisible: boolean
   showIosGuide: boolean
+  showManualGuide: boolean
   dismissBanner: () => void
   openInstall: () => Promise<boolean>
   openBanner: () => void
@@ -44,7 +50,7 @@ function detectStandalone() {
 }
 
 function isDismissedTemporarily() {
-  const raw = localStorage.getItem(DISMISS_UNTIL_KEY)
+  const raw = localStorage.getItem(INSTALL_DISMISS_UNTIL_KEY)
   if (!raw) return false
   const until = Number(raw)
   if (!Number.isFinite(until)) return false
@@ -55,15 +61,21 @@ export function PwaInstallProvider({ children }: { children: ReactNode }) {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null)
   const [bannerVisible, setBannerVisible] = useState(false)
   const [showIosGuide, setShowIosGuide] = useState(false)
+  const [showManualGuide, setShowManualGuide] = useState(false)
   const [isStandalone, setIsStandalone] = useState(false)
   const [isIos, setIsIos] = useState(false)
 
   useEffect(() => {
     setIsStandalone(detectStandalone())
     setIsIos(detectIos())
-    // Ancienne clé « Plus tard » permanente → on la retire pour permettre
-    // de réafficher / réinstaller via le menu.
     localStorage.removeItem('couturia.pwa.installDismissed')
+
+    // Nouvelle version déployée → on réautorise la bannière d'installation.
+    const hintVersion = localStorage.getItem(INSTALL_HINT_VERSION_KEY)
+    if (hintVersion !== APP_VERSION) {
+      localStorage.removeItem(INSTALL_DISMISS_UNTIL_KEY)
+      localStorage.setItem(INSTALL_HINT_VERSION_KEY, APP_VERSION)
+    }
   }, [])
 
   useEffect(() => {
@@ -72,6 +84,7 @@ export function PwaInstallProvider({ children }: { children: ReactNode }) {
     const onBeforeInstall = (event: Event) => {
       event.preventDefault()
       setDeferred(event as BeforeInstallPromptEvent)
+      setShowManualGuide(false)
       if (!isDismissedTemporarily()) {
         setShowIosGuide(false)
         setBannerVisible(true)
@@ -80,44 +93,62 @@ export function PwaInstallProvider({ children }: { children: ReactNode }) {
 
     window.addEventListener('beforeinstallprompt', onBeforeInstall)
 
-    if (detectIos() && !isDismissedTemporarily()) {
-      const timer = window.setTimeout(() => {
+    const timer = window.setTimeout(() => {
+      if (isDismissedTemporarily()) return
+      if (detectStandalone()) return
+
+      if (detectIos()) {
         setShowIosGuide(true)
+        setShowManualGuide(false)
         setBannerVisible(true)
-      }, 2500)
-      return () => {
-        window.clearTimeout(timer)
-        window.removeEventListener('beforeinstallprompt', onBeforeInstall)
+        return
       }
-    }
+
+      // Android/desktop : si pas d'event natif, on affiche le guide manuel.
+      setDeferred((current) => {
+        if (!current) {
+          queueMicrotask(() => {
+            setShowIosGuide(false)
+            setShowManualGuide(true)
+            setBannerVisible(true)
+          })
+        }
+        return current
+      })
+    }, 4000)
 
     return () => {
+      window.clearTimeout(timer)
       window.removeEventListener('beforeinstallprompt', onBeforeInstall)
     }
   }, [isStandalone])
 
   const dismissBanner = useCallback(() => {
     const until = Date.now() + DISMISS_DAYS * 24 * 60 * 60 * 1000
-    localStorage.setItem(DISMISS_UNTIL_KEY, String(until))
-    // Nettoyage de l'ancienne clé permanente
+    localStorage.setItem(INSTALL_DISMISS_UNTIL_KEY, String(until))
     localStorage.removeItem('couturia.pwa.installDismissed')
     setBannerVisible(false)
   }, [])
 
   const openBanner = useCallback(() => {
     if (isStandalone) return
-    setShowIosGuide(detectIos() && !deferred)
+    const ios = detectIos()
+    setShowIosGuide(ios && !deferred)
+    setShowManualGuide(!ios && !deferred)
     setBannerVisible(true)
   }, [deferred, isStandalone])
 
   const openInstall = useCallback(async () => {
     if (detectIos() && !deferred) {
       setShowIosGuide(true)
+      setShowManualGuide(false)
       setBannerVisible(true)
       return false
     }
 
     if (!deferred) {
+      setShowIosGuide(false)
+      setShowManualGuide(true)
       setBannerVisible(true)
       return false
     }
@@ -128,17 +159,21 @@ export function PwaInstallProvider({ children }: { children: ReactNode }) {
     setBannerVisible(false)
     if (choice.outcome === 'dismissed') {
       dismissBanner()
+    } else {
+      // Installé : on considère la version vue aussi.
+      localStorage.setItem(SEEN_VERSION_KEY, APP_VERSION)
     }
     return choice.outcome === 'accepted'
   }, [deferred, dismissBanner])
 
   const value = useMemo(
     () => ({
-      canInstall: Boolean(deferred) || isIos,
+      canNativeInstall: Boolean(deferred),
       isStandalone,
       isIos,
       bannerVisible,
       showIosGuide,
+      showManualGuide,
       dismissBanner,
       openInstall,
       openBanner,
@@ -149,6 +184,7 @@ export function PwaInstallProvider({ children }: { children: ReactNode }) {
       isStandalone,
       bannerVisible,
       showIosGuide,
+      showManualGuide,
       dismissBanner,
       openInstall,
       openBanner,

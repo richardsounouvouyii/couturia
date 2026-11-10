@@ -5,8 +5,10 @@ export function PwaInstallPrompt() {
   const {
     bannerVisible,
     showIosGuide,
+    showManualGuide,
     dismissBanner,
     openInstall,
+    canNativeInstall,
     isStandalone,
   } = usePwaInstall()
 
@@ -24,7 +26,13 @@ export function PwaInstallPrompt() {
           </p>
           {showIosGuide ? (
             <p className="mt-1 text-sm text-muted">
-              Sur iPhone : touchez Partager, puis Sur l&apos;écran d&apos;accueil.
+              Sur iPhone (Safari) : Partager → Sur l&apos;écran d&apos;accueil.
+            </p>
+          ) : showManualGuide ? (
+            <p className="mt-1 text-sm text-muted">
+              Sur Chrome : menu ⋮ → « Installer l&apos;application » ou « Ajouter à
+              l&apos;écran d&apos;accueil ». Vous pouvez aussi le faire via le menu ☰
+              Couturia.
             </p>
           ) : (
             <p className="mt-1 text-sm text-muted">
@@ -33,7 +41,7 @@ export function PwaInstallPrompt() {
             </p>
           )}
           <div className="mt-3 flex flex-wrap gap-2">
-            {!showIosGuide ? (
+            {canNativeInstall ? (
               <button
                 type="button"
                 onClick={() => void openInstall()}

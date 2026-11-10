@@ -5,6 +5,7 @@ import { Navbar } from '@/components/Navbar'
 import { PwaInstallPrompt } from '@/components/PwaInstallPrompt'
 import { PwaUpdateToast } from '@/components/PwaUpdateToast'
 import { ScrollToTop } from '@/components/ScrollToTop'
+import { WhatsNewModal } from '@/components/WhatsNewModal'
 
 export function PublicLayout() {
   return (
@@ -18,6 +19,7 @@ export function PublicLayout() {
       <MobileBottomNav />
       <PwaInstallPrompt />
       <PwaUpdateToast />
+      <WhatsNewModal />
     </div>
   )
 }

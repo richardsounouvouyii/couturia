@@ -15,11 +15,13 @@ export function PwaUpdateToast() {
 
   return (
     <div className="fixed inset-x-0 top-20 z-[70] flex justify-center px-4">
-      <div className="flex max-w-md items-center gap-3 rounded-2xl border border-line bg-card px-4 py-3 shadow-lg">
-        <p className="text-sm text-heading">Une nouvelle version de Couturia est prête.</p>
+      <div className="flex max-w-md flex-col gap-2 rounded-2xl border border-line bg-card px-4 py-3 shadow-lg sm:flex-row sm:items-center">
+        <p className="text-sm text-heading">
+          Une nouvelle version de Couturia est prête. Actualisez pour voir les nouveautés.
+        </p>
         <button
           type="button"
-          className="btn btn-primary btn-sm gap-1.5 rounded-xl"
+          className="btn btn-primary btn-sm shrink-0 gap-1.5 rounded-xl"
           onClick={() => reloadPage()}
         >
           <RefreshCw className="size-3.5" />
