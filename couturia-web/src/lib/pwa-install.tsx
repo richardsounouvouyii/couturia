@@ -20,9 +20,12 @@ export type BeforeInstallPromptEvent = Event & {
 
 const DISMISS_DAYS = 2
 const INSTALL_HINT_VERSION_KEY = 'couturia.pwa.installHintVersion'
+/** Marqueur local quand l'utilisateur a installé l'app (même s'il ouvre encore le site dans le navigateur). */
+export const INSTALLED_KEY = 'couturia.pwa.installed'
 
 type PwaInstallContextValue = {
   canNativeInstall: boolean
+  isInstalled: boolean
   isStandalone: boolean
   isIos: boolean
   bannerVisible: boolean
@@ -44,9 +47,24 @@ function detectStandalone() {
   if (typeof window === 'undefined') return false
   return (
     window.matchMedia('(display-mode: standalone)').matches ||
+    window.matchMedia('(display-mode: minimal-ui)').matches ||
     ('standalone' in navigator &&
       Boolean((navigator as Navigator & { standalone?: boolean }).standalone))
   )
+}
+
+function readInstalledFlag() {
+  return localStorage.getItem(INSTALLED_KEY) === '1'
+}
+
+function markInstalled() {
+  localStorage.setItem(INSTALLED_KEY, '1')
+  localStorage.setItem(SEEN_VERSION_KEY, APP_VERSION)
+  localStorage.removeItem(INSTALL_DISMISS_UNTIL_KEY)
+}
+
+function clearInstalledFlag() {
+  localStorage.removeItem(INSTALLED_KEY)
 }
 
 function isDismissedTemporarily() {
@@ -63,26 +81,48 @@ export function PwaInstallProvider({ children }: { children: ReactNode }) {
   const [showIosGuide, setShowIosGuide] = useState(false)
   const [showManualGuide, setShowManualGuide] = useState(false)
   const [isStandalone, setIsStandalone] = useState(false)
+  const [isInstalled, setIsInstalled] = useState(false)
   const [isIos, setIsIos] = useState(false)
 
   useEffect(() => {
-    setIsStandalone(detectStandalone())
+    const standalone = detectStandalone()
+    setIsStandalone(standalone)
     setIsIos(detectIos())
+    setIsInstalled(standalone || readInstalledFlag())
     localStorage.removeItem('couturia.pwa.installDismissed')
 
-    // Nouvelle version déployée → on réautorise la bannière d'installation.
+    // Nouvelle version : on peut reproposer l'install seulement si pas déjà installé.
     const hintVersion = localStorage.getItem(INSTALL_HINT_VERSION_KEY)
     if (hintVersion !== APP_VERSION) {
-      localStorage.removeItem(INSTALL_DISMISS_UNTIL_KEY)
       localStorage.setItem(INSTALL_HINT_VERSION_KEY, APP_VERSION)
+      if (!standalone && !readInstalledFlag()) {
+        localStorage.removeItem(INSTALL_DISMISS_UNTIL_KEY)
+      }
     }
+
+    const onAppInstalled = () => {
+      markInstalled()
+      setIsInstalled(true)
+      setIsStandalone(detectStandalone())
+      setDeferred(null)
+      setBannerVisible(false)
+    }
+
+    window.addEventListener('appinstalled', onAppInstalled)
+    return () => window.removeEventListener('appinstalled', onAppInstalled)
   }, [])
 
   useEffect(() => {
-    if (isStandalone) return
+    if (isInstalled || isStandalone) {
+      setBannerVisible(false)
+      return
+    }
 
     const onBeforeInstall = (event: Event) => {
       event.preventDefault()
+      // Le navigateur propose l'install → l'app n'est plus considérée installée.
+      clearInstalledFlag()
+      setIsInstalled(false)
       setDeferred(event as BeforeInstallPromptEvent)
       setShowManualGuide(false)
       if (!isDismissedTemporarily()) {
@@ -95,7 +135,7 @@ export function PwaInstallProvider({ children }: { children: ReactNode }) {
 
     const timer = window.setTimeout(() => {
       if (isDismissedTemporarily()) return
-      if (detectStandalone()) return
+      if (detectStandalone() || readInstalledFlag()) return
 
       if (detectIos()) {
         setShowIosGuide(true)
@@ -104,10 +144,10 @@ export function PwaInstallProvider({ children }: { children: ReactNode }) {
         return
       }
 
-      // Android/desktop : si pas d'event natif, on affiche le guide manuel.
       setDeferred((current) => {
         if (!current) {
           queueMicrotask(() => {
+            if (detectStandalone() || readInstalledFlag()) return
             setShowIosGuide(false)
             setShowManualGuide(true)
             setBannerVisible(true)
@@ -121,7 +161,7 @@ export function PwaInstallProvider({ children }: { children: ReactNode }) {
       window.clearTimeout(timer)
       window.removeEventListener('beforeinstallprompt', onBeforeInstall)
     }
-  }, [isStandalone])
+  }, [isInstalled, isStandalone])
 
   const dismissBanner = useCallback(() => {
     const until = Date.now() + DISMISS_DAYS * 24 * 60 * 60 * 1000
@@ -131,14 +171,16 @@ export function PwaInstallProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const openBanner = useCallback(() => {
-    if (isStandalone) return
+    if (isInstalled || isStandalone) return
     const ios = detectIos()
     setShowIosGuide(ios && !deferred)
     setShowManualGuide(!ios && !deferred)
     setBannerVisible(true)
-  }, [deferred, isStandalone])
+  }, [deferred, isInstalled, isStandalone])
 
   const openInstall = useCallback(async () => {
+    if (isInstalled || isStandalone) return true
+
     if (detectIos() && !deferred) {
       setShowIosGuide(true)
       setShowManualGuide(false)
@@ -159,16 +201,18 @@ export function PwaInstallProvider({ children }: { children: ReactNode }) {
     setBannerVisible(false)
     if (choice.outcome === 'dismissed') {
       dismissBanner()
-    } else {
-      // Installé : on considère la version vue aussi.
-      localStorage.setItem(SEEN_VERSION_KEY, APP_VERSION)
+      return false
     }
-    return choice.outcome === 'accepted'
-  }, [deferred, dismissBanner])
+
+    markInstalled()
+    setIsInstalled(true)
+    return true
+  }, [deferred, dismissBanner, isInstalled, isStandalone])
 
   const value = useMemo(
     () => ({
       canNativeInstall: Boolean(deferred),
+      isInstalled: isInstalled || isStandalone,
       isStandalone,
       isIos,
       bannerVisible,
@@ -180,6 +224,7 @@ export function PwaInstallProvider({ children }: { children: ReactNode }) {
     }),
     [
       deferred,
+      isInstalled,
       isIos,
       isStandalone,
       bannerVisible,

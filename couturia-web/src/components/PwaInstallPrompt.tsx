@@ -9,10 +9,10 @@ export function PwaInstallPrompt() {
     dismissBanner,
     openInstall,
     canNativeInstall,
-    isStandalone,
+    isInstalled,
   } = usePwaInstall()
 
-  if (isStandalone || !bannerVisible) return null
+  if (isInstalled || !bannerVisible) return null
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-[4.5rem] z-[70] px-3 lg:bottom-6 lg:px-6">

@@ -28,7 +28,7 @@ export function Navbar() {
   const buttonRef = useRef<HTMLButtonElement>(null)
   const location = useLocation()
   const { count } = useFavorites()
-  const { canNativeInstall, isStandalone, openInstall, openBanner } = usePwaInstall()
+  const { canNativeInstall, isInstalled, openInstall, openBanner } = usePwaInstall()
 
   useEffect(() => {
     setMenuOpen(false)
@@ -176,7 +176,7 @@ export function Navbar() {
                 À propos
               </a>
               <div className="my-1 border-t border-line" />
-              {!isStandalone ? (
+              {!isInstalled ? (
                 <button
                   type="button"
                   className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-heading hover:bg-page"
