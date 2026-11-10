@@ -1,9 +1,10 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
-import { Heart, Menu, Search, X } from 'lucide-react'
+import { Download, Heart, Menu, Search, X } from 'lucide-react'
 import logo from '@/assets/images/logo.png'
 import { SearchOverlay } from '@/components/SearchOverlay'
 import { useFavorites } from '@/lib/favorites'
+import { usePwaInstall } from '@/lib/pwa-install'
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   [
@@ -27,6 +28,7 @@ export function Navbar() {
   const buttonRef = useRef<HTMLButtonElement>(null)
   const location = useLocation()
   const { count } = useFavorites()
+  const { canInstall, isStandalone, openInstall, openBanner } = usePwaInstall()
 
   useEffect(() => {
     setMenuOpen(false)
@@ -174,6 +176,23 @@ export function Navbar() {
                 À propos
               </a>
               <div className="my-1 border-t border-line" />
+              {!isStandalone ? (
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-heading hover:bg-page"
+                  onClick={() => {
+                    setMenuOpen(false)
+                    if (canInstall) {
+                      void openInstall()
+                    } else {
+                      openBanner()
+                    }
+                  }}
+                >
+                  <Download className="size-4 text-primary" aria-hidden />
+                  Installer l&apos;application
+                </button>
+              ) : null}
               <NavLink
                 to="/inscription"
                 className={mobileLinkClass}
