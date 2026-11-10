@@ -17,7 +17,7 @@ export function FavorisPage() {
         path="/favoris"
         noIndex
       />
-      <section className="border-b border-line bg-white">
+      <section className="border-b border-line bg-surface">
         <div className="mx-auto max-w-7xl px-4 py-8 lg:px-8 lg:py-10">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gold">
             Sélection

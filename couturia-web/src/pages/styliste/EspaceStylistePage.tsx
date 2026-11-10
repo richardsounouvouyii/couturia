@@ -16,7 +16,7 @@ export function EspaceStylistePage() {
         noIndex
       />
 
-      <section className="border-b border-line bg-white">
+      <section className="border-b border-line bg-surface">
         <div className="mx-auto max-w-7xl px-4 py-6 lg:px-8 lg:py-8">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gold">
             Espace styliste · démo

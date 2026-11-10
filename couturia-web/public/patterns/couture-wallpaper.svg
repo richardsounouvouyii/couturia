@@ -1,49 +1,51 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200" fill="none">
-  <!-- Ciseaux -->
-  <g transform="translate(28 30) rotate(-18)" stroke="#700D39" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-    <circle cx="6" cy="6" r="5"/>
-    <circle cx="6" cy="22" r="5"/>
-    <path d="M10 9 L28 18"/>
-    <path d="M10 19 L28 10"/>
-    <path d="M28 10 L34 8"/>
-    <path d="M28 18 L34 20"/>
+  <g stroke="#700D39" stroke-opacity="0.45" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Ciseaux -->
+    <g transform="translate(22 28) rotate(-18)">
+      <circle cx="7" cy="7" r="6"/>
+      <circle cx="7" cy="25" r="6"/>
+      <path d="M12 10 L32 20"/>
+      <path d="M12 22 L32 12"/>
+      <path d="M32 12 L39 9"/>
+      <path d="M32 20 L39 23"/>
+    </g>
+    <!-- Règle -->
+    <g transform="translate(24 118) rotate(12)">
+      <rect x="0" y="0" width="54" height="13" rx="2"/>
+      <path d="M8 0 V6"/>
+      <path d="M16 0 V8"/>
+      <path d="M24 0 V6"/>
+      <path d="M32 0 V8"/>
+      <path d="M40 0 V6"/>
+      <path d="M48 0 V6"/>
+    </g>
   </g>
 
-  <!-- Bobine -->
-  <g transform="translate(118 24)" stroke="#B38B59" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-    <rect x="4" y="8" width="20" height="18" rx="2"/>
-    <path d="M4 12 H24"/>
-    <path d="M4 22 H24"/>
-    <path d="M8 8 V4 H20 V8"/>
-    <path d="M8 26 V30 H20 V26"/>
+  <g stroke="#B38B59" stroke-opacity="0.5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Bobine -->
+    <g transform="translate(118 22)">
+      <rect x="4" y="10" width="22" height="18" rx="2"/>
+      <path d="M4 14 H26"/>
+      <path d="M4 24 H26"/>
+      <path d="M8 10 V5 H22 V10"/>
+      <path d="M8 28 V33 H22 V28"/>
+    </g>
+    <!-- Bouton -->
+    <g transform="translate(96 88)">
+      <circle cx="0" cy="0" r="8"/>
+      <circle cx="-2.8" cy="-2" r="1.1"/>
+      <circle cx="2.8" cy="-2" r="1.1"/>
+      <circle cx="-2.8" cy="2.6" r="1.1"/>
+      <circle cx="2.8" cy="2.6" r="1.1"/>
+    </g>
   </g>
 
-  <!-- Règle -->
-  <g transform="translate(36 118) rotate(12)" stroke="#700D39" stroke-width="1.5" stroke-linecap="round">
-    <rect x="0" y="0" width="52" height="12" rx="2"/>
-    <path d="M8 0 V5"/>
-    <path d="M16 0 V7"/>
-    <path d="M24 0 V5"/>
-    <path d="M32 0 V7"/>
-    <path d="M40 0 V5"/>
-    <path d="M48 0 V5"/>
-  </g>
-
-  <!-- Machine à coudre (simplifiée) -->
-  <g transform="translate(122 112)" stroke="#9A184F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M4 28 H36"/>
-    <path d="M8 28 V18 H20 V10 H30 V18 H34 V28"/>
-    <circle cx="14" cy="22" r="2.5"/>
-    <path d="M24 10 V6"/>
-    <path d="M22 6 H28"/>
-  </g>
-
-  <!-- Bouton / aiguille discrète -->
-  <g transform="translate(92 86)" stroke="#B38B59" stroke-width="1.4" stroke-linecap="round">
-    <circle cx="0" cy="0" r="7"/>
-    <circle cx="-2.5" cy="-1.5" r="1"/>
-    <circle cx="2.5" cy="-1.5" r="1"/>
-    <circle cx="-2.5" cy="2.5" r="1"/>
-    <circle cx="2.5" cy="2.5" r="1"/>
+  <!-- Machine -->
+  <g transform="translate(118 112)" stroke="#9A184F" stroke-opacity="0.45" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 30 H40"/>
+    <path d="M7 30 V18 H20 V9 H32 V18 H37 V30"/>
+    <circle cx="14" cy="23" r="2.8"/>
+    <path d="M25 9 V4"/>
+    <path d="M22 4 H31"/>
   </g>
 </svg>

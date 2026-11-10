@@ -21,7 +21,7 @@ export function StylistCreationsPage() {
         noIndex
       />
 
-      <section className="border-b border-line bg-white">
+      <section className="border-b border-line bg-surface">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6 sm:flex-row sm:items-end sm:justify-between lg:px-8">
           <div>
             <h1 className="font-display text-2xl font-semibold text-primary sm:text-3xl">

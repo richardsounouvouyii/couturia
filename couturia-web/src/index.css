@@ -45,35 +45,30 @@ html {
 
 body {
   min-height: 100vh;
-  background-color: var(--color-page);
   color: var(--color-heading);
   font-family: var(--font-sans);
-}
-
-/* Fond wallpaper couture (style WhatsApp) — fixe, sans animation */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
   background-color: var(--color-page);
-  background-image: url("/patterns/couture-wallpaper.svg");
-  background-repeat: repeat;
-  background-size: 168px 168px;
-  background-position: center top;
-  opacity: 0.08;
 }
 
 #root {
-  position: relative;
-  z-index: 1;
+  min-height: 100vh;
+  background: transparent;
 }
 
-/* Laisse le motif légèrement visible derrière les pages */
+/* Laisse le wallpaper visible hors cartes / nav / footer */
 @layer utilities {
   .bg-page {
-    background-color: color-mix(in srgb, var(--color-page) 88%, transparent) !important;
+    background-color: transparent !important;
+  }
+
+  /* Bandeaux ouverts : le motif reste visible derrière le contenu */
+  .bg-surface {
+    background-color: transparent !important;
+  }
+
+  /* Nav sticky : léger voile crème, sans flou qui efface le motif */
+  .bg-nav {
+    background-color: rgb(252 248 245 / 0.78) !important;
   }
 }
 

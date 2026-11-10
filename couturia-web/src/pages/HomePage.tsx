@@ -135,7 +135,7 @@ export function HomePage() {
         </div>
 
         {/* Ruban avantages — desktop / tablette */}
-        <div className="relative hidden border-t border-line/70 bg-white/90 backdrop-blur-sm sm:block">
+        <div className="relative hidden border-t border-line/70 bg-surface sm:block">
           <div className="mx-auto grid max-w-7xl gap-0 px-2 sm:grid-cols-2 lg:grid-cols-4 lg:px-4">
             {MOCK_FEATURES.map((feature, index) => {
               const Icon = iconMap[feature.icon]

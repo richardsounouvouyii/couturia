@@ -65,7 +65,7 @@ export function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 border-b border-line bg-page/95 backdrop-blur-md">
+      <header className="sticky top-0 z-50 border-b border-line bg-nav">
         <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-3 px-4 lg:px-8">
           <Link to="/" className="flex shrink-0 items-center" onClick={() => setMenuOpen(false)}>
             <img

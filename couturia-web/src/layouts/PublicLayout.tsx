@@ -1,4 +1,5 @@
 import { Outlet } from 'react-router-dom'
+import { CoutureWallpaper } from '@/components/CoutureWallpaper'
 import { Footer } from '@/components/Footer'
 import { MobileBottomNav } from '@/components/MobileBottomNav'
 import { Navbar } from '@/components/Navbar'
@@ -9,17 +10,20 @@ import { WhatsNewModal } from '@/components/WhatsNewModal'
 
 export function PublicLayout() {
   return (
-    <div className="relative z-[1] flex min-h-screen flex-col bg-page text-heading">
-      <ScrollToTop />
-      <Navbar />
-      <main className="flex-1">
-        <Outlet />
-      </main>
-      <Footer />
-      <MobileBottomNav />
-      <PwaInstallPrompt />
-      <PwaUpdateToast />
-      <WhatsNewModal />
-    </div>
+    <>
+      <CoutureWallpaper />
+      <div className="relative z-[1] flex min-h-screen flex-col bg-transparent text-heading">
+        <ScrollToTop />
+        <Navbar />
+        <main className="flex-1 bg-transparent">
+          <Outlet />
+        </main>
+        <Footer />
+        <MobileBottomNav />
+        <PwaInstallPrompt />
+        <PwaUpdateToast />
+        <WhatsNewModal />
+      </div>
+    </>
   )
 }

@@ -128,7 +128,7 @@ export function CreationsPage() {
         description="Explorez les créations des ateliers couture au Bénin et contactez-les sur WhatsApp."
         path={`/catalogue${searchParams.toString() ? `?${searchParams}` : ''}`}
       />
-      <section className="border-b border-line bg-white">
+      <section className="border-b border-line bg-surface">
         <div className="mx-auto max-w-7xl px-4 pt-5 pb-4 lg:px-8 lg:pt-8 lg:pb-5">
           <div className="flex items-end justify-between gap-3">
             <div>
@@ -157,7 +157,7 @@ export function CreationsPage() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Création, atelier, ville…"
-                className="h-11 w-full rounded-xl border border-line bg-page py-2 pr-12 pl-10 text-sm text-heading outline-none transition placeholder:text-muted focus:border-primary"
+                className="h-11 w-full rounded-xl border border-line bg-white/90 py-2 pr-12 pl-10 text-sm text-heading outline-none transition placeholder:text-muted focus:border-primary"
               />
               <button
                 type="submit"
@@ -170,7 +170,7 @@ export function CreationsPage() {
           </form>
         </div>
 
-        <div className="border-t border-line/70 bg-page/60">
+        <div className="border-t border-line/70 bg-surface">
           <div className="mx-auto max-w-7xl px-4 py-3 lg:px-8">
             <div className="flex gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {MOCK_CATEGORIES.map((item) => {
