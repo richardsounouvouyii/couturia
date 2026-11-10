@@ -12,6 +12,15 @@ export function WhatsNewModal() {
     }
   }, [])
 
+  useEffect(() => {
+    if (!open) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') dismiss()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [open])
+
   function dismiss() {
     localStorage.setItem(SEEN_VERSION_KEY, APP_VERSION)
     setOpen(false)
@@ -20,12 +29,16 @@ export function WhatsNewModal() {
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-end justify-center bg-primary/35 p-4 backdrop-blur-sm sm:items-center">
+    <div
+      className="fixed inset-0 z-[80] flex items-end justify-center bg-primary/35 p-4 backdrop-blur-sm sm:items-center"
+      onClick={dismiss}
+    >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="whats-new-title"
         className="w-full max-w-md rounded-2xl border border-line bg-card p-5 shadow-2xl sm:p-6"
+        onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3">

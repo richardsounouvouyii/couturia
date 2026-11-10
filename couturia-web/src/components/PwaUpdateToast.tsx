@@ -1,17 +1,26 @@
 import { useEffect, useState } from 'react'
 import { RefreshCw } from 'lucide-react'
-import { onPwaUpdateAvailable } from '@/lib/pwa'
+import { applyPwaUpdate, subscribePwaUpdate } from '@/lib/pwa'
 
 export function PwaUpdateToast() {
-  const [reloadPage, setReloadPage] = useState<(() => void) | null>(null)
+  const [visible, setVisible] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    onPwaUpdateAvailable((reload) => {
-      setReloadPage(() => reload)
+    return subscribePwaUpdate((needsRefresh) => {
+      setVisible(needsRefresh)
+      if (!needsRefresh) setLoading(false)
     })
   }, [])
 
-  if (!reloadPage) return null
+  async function onRefresh() {
+    if (loading) return
+    setLoading(true)
+    setVisible(false)
+    await applyPwaUpdate()
+  }
+
+  if (!visible) return null
 
   return (
     <div className="fixed inset-x-0 top-20 z-[70] flex justify-center px-4">
@@ -22,10 +31,11 @@ export function PwaUpdateToast() {
         <button
           type="button"
           className="btn btn-primary btn-sm shrink-0 gap-1.5 rounded-xl"
-          onClick={() => reloadPage()}
+          disabled={loading}
+          onClick={() => void onRefresh()}
         >
-          <RefreshCw className="size-3.5" />
-          Actualiser
+          <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
+          {loading ? 'Chargement…' : 'Actualiser'}
         </button>
       </div>
     </div>
