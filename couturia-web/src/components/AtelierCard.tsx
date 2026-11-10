@@ -4,6 +4,7 @@ import {
   absoluteUrl,
   atelierWhatsAppMessage,
   buildWhatsAppUrl,
+  isWhatsAppAvailable,
 } from '@/lib/whatsapp'
 
 type Props = {
@@ -11,10 +12,13 @@ type Props = {
 }
 
 export function AtelierCard({ atelier }: Props) {
-  const whatsappUrl = buildWhatsAppUrl(
-    atelier.telephoneWhatsapp,
-    atelierWhatsAppMessage(atelier.nom, absoluteUrl(`/ateliers/${atelier.id}`)),
-  )
+  const canWhatsApp = isWhatsAppAvailable(atelier.telephoneWhatsapp)
+  const whatsappUrl = canWhatsApp
+    ? buildWhatsAppUrl(
+        atelier.telephoneWhatsapp,
+        atelierWhatsAppMessage(atelier.nom, absoluteUrl(`/ateliers/${atelier.id}`)),
+      )
+    : null
 
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10">
@@ -32,17 +36,23 @@ export function AtelierCard({ atelier }: Props) {
             Vérifié
           </span>
         )}
-        <a
-          href={whatsappUrl}
-          target="_blank"
-          rel="noreferrer"
-          onClick={(event) => event.stopPropagation()}
-          className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-[#25D366] px-2.5 py-1 text-[11px] font-semibold text-white shadow-sm"
-          aria-label={`Contacter ${atelier.nom} sur WhatsApp`}
-        >
-          <MessageCircle className="size-3.5" aria-hidden />
-          WhatsApp
-        </a>
+        {whatsappUrl ? (
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noreferrer"
+            onClick={(event) => event.stopPropagation()}
+            className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-[#25D366] px-2.5 py-1 text-[11px] font-semibold text-white shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            aria-label={`Contacter ${atelier.nom} sur WhatsApp`}
+          >
+            <MessageCircle className="size-3.5" aria-hidden />
+            WhatsApp
+          </a>
+        ) : (
+          <span className="absolute top-3 right-3 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-semibold text-muted shadow-sm">
+            WhatsApp indisponible
+          </span>
+        )}
         <span className="absolute right-3 bottom-3 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-medium text-heading shadow-sm">
           {atelier.creationsCount} créations
         </span>

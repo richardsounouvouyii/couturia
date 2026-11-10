@@ -11,6 +11,7 @@ import {
   X,
 } from 'lucide-react'
 import { CreationCard } from '@/components/CreationCard'
+import { DocumentMeta } from '@/components/DocumentMeta'
 import { CREATION_VILLES, MOCK_CATEGORIES, MOCK_CREATIONS } from '@/lib/mock-data'
 
 const iconMap = {
@@ -38,7 +39,9 @@ export function CreationsPage() {
   const [category, setCategory] = useState(initialCategory)
   const [query, setQuery] = useState(searchParams.get('q') ?? '')
   const [ville, setVille] = useState(searchParams.get('ville') ?? 'Toutes')
-  const [sort, setSort] = useState<SortKey>('recent')
+  const [sort, setSort] = useState<SortKey>(
+    (searchParams.get('tri') as SortKey) || 'recent',
+  )
 
   const filtered = useMemo(() => {
     let items = [...MOCK_CREATIONS]
@@ -81,11 +84,17 @@ export function CreationsPage() {
   const hasFilters =
     category !== 'tous' || ville !== 'Toutes' || query.trim() !== '' || sort !== 'recent'
 
-  function syncParams(nextCategory: string, nextQuery: string, nextVille: string) {
+  function syncParams(
+    nextCategory: string,
+    nextQuery: string,
+    nextVille: string,
+    nextSort: SortKey = sort,
+  ) {
     const next = new URLSearchParams()
     if (nextCategory !== 'tous') next.set('categorie', nextCategory)
     if (nextQuery.trim()) next.set('q', nextQuery.trim())
     if (nextVille !== 'Toutes') next.set('ville', nextVille)
+    if (nextSort !== 'recent') next.set('tri', nextSort)
     setSearchParams(next, { replace: true })
   }
 
@@ -114,6 +123,11 @@ export function CreationsPage() {
 
   return (
     <div className="bg-page">
+      <DocumentMeta
+        title="Créations"
+        description="Explorez les créations des ateliers couture au Bénin et contactez-les sur WhatsApp."
+        path={`/catalogue${searchParams.toString() ? `?${searchParams}` : ''}`}
+      />
       <section className="border-b border-line bg-white">
         <div className="mx-auto max-w-7xl px-4 pt-5 pb-4 lg:px-8 lg:pt-8 lg:pb-5">
           <div className="flex items-end justify-between gap-3">
@@ -204,9 +218,13 @@ export function CreationsPage() {
               </div>
 
               <select
-                className="h-7 shrink-0 rounded-full border border-line bg-white px-2.5 text-xs text-heading outline-none"
+                className="h-7 shrink-0 rounded-full border border-line bg-white px-2.5 text-xs text-heading outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
                 value={sort}
-                onChange={(e) => setSort(e.target.value as SortKey)}
+                onChange={(e) => {
+                  const nextSort = e.target.value as SortKey
+                  setSort(nextSort)
+                  syncParams(category, query, ville, nextSort)
+                }}
                 aria-label="Trier"
               >
                 <option value="recent">Récentes</option>

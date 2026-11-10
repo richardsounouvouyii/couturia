@@ -1,21 +1,12 @@
 import { Link, useParams } from 'react-router-dom'
-import {
-  ArrowLeft,
-  House,
-  MapPin,
-  MessageCircle,
-  Share2,
-  Star,
-} from 'lucide-react'
+import { ArrowLeft, House, MapPin, MessageCircle, Share2, Star } from 'lucide-react'
+import { DocumentMeta } from '@/components/DocumentMeta'
 import { FavoriteButton } from '@/components/FavoriteButton'
+import { WhatsAppButton } from '@/components/WhatsAppButton'
 import { formatFcfa } from '@/lib/format'
 import { getAtelierById, MOCK_CREATIONS } from '@/lib/mock-data'
 import { facebookShareUrl, nativeShare, whatsappShareUrl } from '@/lib/share'
-import {
-  absoluteUrl,
-  buildWhatsAppUrl,
-  creationWhatsAppMessage,
-} from '@/lib/whatsapp'
+import { absoluteUrl, creationWhatsAppMessage } from '@/lib/whatsapp'
 
 export function CreationDetailPage() {
   const { id } = useParams()
@@ -25,6 +16,7 @@ export function CreationDetailPage() {
   if (!creation) {
     return (
       <div className="mx-auto max-w-lg px-4 py-20 text-center">
+        <DocumentMeta title="Création introuvable" noIndex />
         <h1 className="font-display text-2xl font-semibold text-primary">
           Création introuvable
         </h1>
@@ -39,26 +31,29 @@ export function CreationDetailPage() {
   }
 
   const pageUrl = absoluteUrl(`/catalogue/${creation.id}`)
-  const whatsappUrl = atelier
-    ? buildWhatsAppUrl(
-        atelier.telephoneWhatsapp,
-        creationWhatsAppMessage(creation.titre, pageUrl),
-      )
-    : undefined
+  const message = creationWhatsAppMessage(creation.titre, pageUrl)
+  const shareTitle = creation.titre
 
   async function onNativeShare() {
     const shared = await nativeShare({
-      title: creation!.titre,
-      text: `Découvre « ${creation!.titre} » sur Couturia`,
+      title: shareTitle,
+      text: `Découvre « ${shareTitle} » sur Couturia`,
       url: pageUrl,
     })
     if (!shared) {
-      window.open(whatsappShareUrl(pageUrl, creation!.titre), '_blank', 'noreferrer')
+      window.open(whatsappShareUrl(pageUrl, shareTitle), '_blank', 'noreferrer')
     }
   }
 
   return (
     <div className="bg-page">
+      <DocumentMeta
+        title={creation.titre}
+        description={`${creation.titre} par ${creation.atelier} à ${creation.ville}. Contactez l’atelier sur WhatsApp via Couturia.`}
+        image={creation.image}
+        path={`/catalogue/${creation.id}`}
+      />
+
       <div className="mx-auto max-w-7xl px-4 py-6 lg:px-8 lg:py-10">
         <Link
           to="/catalogue"
@@ -119,18 +114,8 @@ export function CreationDetailPage() {
               pour discuter de vos mesures, du délai et du prix. Aucun compte requis.
             </p>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              {whatsappUrl ? (
-                <a
-                  href={whatsappUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn rounded-xl border-0 bg-[#25D366] text-white hover:bg-[#1ebe57]"
-                >
-                  <MessageCircle className="size-4" />
-                  Contacter sur WhatsApp
-                </a>
-              ) : null}
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start">
+              <WhatsAppButton phone={atelier?.telephoneWhatsapp} message={message} />
               <Link
                 to={`/ateliers/${creation.atelierId}`}
                 className="btn rounded-xl border-2 border-gold bg-transparent text-heading hover:bg-gold/10"

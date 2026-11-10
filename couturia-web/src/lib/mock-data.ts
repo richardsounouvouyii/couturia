@@ -112,7 +112,7 @@ export const MOCK_ATELIERS: MockAtelier[] = [
       'Tenues confortables et festives pour enfants. Couleurs vives, tissus doux.',
     ville: 'Parakou',
     quartier: 'Zongo',
-    telephoneWhatsapp: '+22990000004',
+    telephoneWhatsapp: '',
     horaires: 'Lun–Sam · 10h–17h',
     creationsCount: 12,
     note: 4.7,

@@ -7,6 +7,7 @@ import {
   absoluteUrl,
   buildWhatsAppUrl,
   creationWhatsAppMessage,
+  isWhatsAppAvailable,
 } from '@/lib/whatsapp'
 
 type Props = {
@@ -15,15 +16,17 @@ type Props = {
 
 export function CreationCard({ creation }: Props) {
   const atelier = getAtelierById(creation.atelierId)
-  const whatsappUrl = atelier
-    ? buildWhatsAppUrl(
-        atelier.telephoneWhatsapp,
-        creationWhatsAppMessage(
-          creation.titre,
-          absoluteUrl(`/catalogue/${creation.id}`),
-        ),
-      )
-    : undefined
+  const canWhatsApp = atelier ? isWhatsAppAvailable(atelier.telephoneWhatsapp) : false
+  const whatsappUrl =
+    atelier && canWhatsApp
+      ? buildWhatsAppUrl(
+          atelier.telephoneWhatsapp,
+          creationWhatsAppMessage(
+            creation.titre,
+            absoluteUrl(`/catalogue/${creation.id}`),
+          ),
+        )
+      : null
 
   return (
     <article className="group flex min-w-0 flex-col gap-2.5">
@@ -44,13 +47,17 @@ export function CreationCard({ creation }: Props) {
             target="_blank"
             rel="noreferrer"
             onClick={(event) => event.stopPropagation()}
-            className="absolute bottom-2.5 left-2.5 z-10 inline-flex items-center gap-1 rounded-full bg-[#25D366] px-2 py-1 text-[10px] font-semibold text-white shadow-sm"
+            className="absolute bottom-2.5 left-2.5 z-10 inline-flex items-center gap-1 rounded-full bg-[#25D366] px-2 py-1 text-[10px] font-semibold text-white shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
             aria-label={`Contacter ${creation.atelier} sur WhatsApp`}
           >
             <MessageCircle className="size-3" aria-hidden />
             WhatsApp
           </a>
-        ) : null}
+        ) : (
+          <span className="absolute bottom-2.5 left-2.5 z-10 rounded-full bg-white/95 px-2 py-1 text-[10px] font-semibold text-muted shadow-sm">
+            WhatsApp indisponible
+          </span>
+        )}
       </div>
 
       <div className="space-y-1 px-0.5">

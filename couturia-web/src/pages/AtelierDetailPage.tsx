@@ -4,17 +4,14 @@ import {
   BadgeCheck,
   Clock3,
   MapPin,
-  MessageCircle,
   Sparkles,
   Star,
 } from 'lucide-react'
 import { CreationCard } from '@/components/CreationCard'
+import { DocumentMeta } from '@/components/DocumentMeta'
+import { WhatsAppButton } from '@/components/WhatsAppButton'
 import { getAtelierById, getCreationsByAtelier } from '@/lib/mock-data'
-import {
-  absoluteUrl,
-  atelierWhatsAppMessage,
-  buildWhatsAppUrl,
-} from '@/lib/whatsapp'
+import { absoluteUrl, atelierWhatsAppMessage } from '@/lib/whatsapp'
 
 export function AtelierDetailPage() {
   const { id } = useParams()
@@ -24,6 +21,7 @@ export function AtelierDetailPage() {
   if (!atelier) {
     return (
       <div className="mx-auto max-w-lg px-4 py-20 text-center">
+        <DocumentMeta title="Atelier introuvable" noIndex />
         <h1 className="font-display text-2xl font-semibold text-primary">
           Atelier introuvable
         </h1>
@@ -38,19 +36,22 @@ export function AtelierDetailPage() {
   }
 
   const pageUrl = absoluteUrl(`/ateliers/${atelier.id}`)
-  const whatsappUrl = buildWhatsAppUrl(
-    atelier.telephoneWhatsapp,
-    atelierWhatsAppMessage(atelier.nom, pageUrl),
-  )
+  const message = atelierWhatsAppMessage(atelier.nom, pageUrl)
 
   return (
     <div className="bg-page">
+      <DocumentMeta
+        title={atelier.nom}
+        description={`${atelier.nom} — ${atelier.specialite} à ${atelier.quartier}, ${atelier.ville}. ${atelier.description}`}
+        image={atelier.coverImage}
+        path={`/ateliers/${atelier.id}`}
+      />
+
       <div className="relative h-48 overflow-hidden bg-ribbon sm:h-64 lg:h-72">
         <img
           src={atelier.coverImage}
-          alt=""
+          alt={`Couverture de ${atelier.nom}`}
           className="size-full object-cover"
-          aria-hidden
         />
         <div className="absolute inset-0 bg-gradient-to-t from-primary/70 via-primary/20 to-transparent" />
       </div>
@@ -97,15 +98,11 @@ export function AtelierDetailPage() {
               </div>
             </div>
 
-            <a
-              href={whatsappUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="btn rounded-xl border-0 bg-[#25D366] text-white hover:bg-[#1ebe57] sm:w-fit"
-            >
-              <MessageCircle className="size-4" />
-              Contacter sur WhatsApp
-            </a>
+            <WhatsAppButton
+              phone={atelier.telephoneWhatsapp}
+              message={message}
+              className="sm:w-fit"
+            />
           </div>
 
           <p className="mt-6 max-w-3xl text-sm leading-relaxed text-muted sm:text-base">

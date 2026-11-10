@@ -1,10 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { BadgeCheck, Search, Sparkles, X } from 'lucide-react'
 import { AtelierCard } from '@/components/AtelierCard'
-import { MOCK_ATELIERS } from '@/lib/mock-data'
-
-const VILLES = ['Toutes', ...Array.from(new Set(MOCK_ATELIERS.map((a) => a.ville)))]
+import { DocumentMeta } from '@/components/DocumentMeta'
+import { ATELIER_VILLES, MOCK_ATELIERS } from '@/lib/mock-data'
 
 const SPECIALITES = [
   'Toutes',
@@ -17,24 +16,20 @@ export function AteliersPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [query, setQuery] = useState(searchParams.get('q') ?? '')
   const [ville, setVille] = useState(searchParams.get('ville') ?? 'Toutes')
-  const [specialite, setSpecialite] = useState('Toutes')
-  const [verifiesOnly, setVerifiesOnly] = useState(false)
-  const [sort, setSort] = useState<SortKey>('note')
+  const [specialite, setSpecialite] = useState(searchParams.get('specialite') ?? 'Toutes')
+  const [verifiesOnly, setVerifiesOnly] = useState(searchParams.get('verifie') === '1')
+  const [sort, setSort] = useState<SortKey>(
+    (searchParams.get('tri') as SortKey) || 'note',
+  )
 
   const filtered = useMemo(() => {
     let items = [...MOCK_ATELIERS]
 
-    if (ville !== 'Toutes') {
-      items = items.filter((item) => item.ville === ville)
-    }
-
+    if (ville !== 'Toutes') items = items.filter((item) => item.ville === ville)
     if (specialite !== 'Toutes') {
       items = items.filter((item) => item.specialite === specialite)
     }
-
-    if (verifiesOnly) {
-      items = items.filter((item) => item.verifie)
-    }
+    if (verifiesOnly) items = items.filter((item) => item.verifie)
 
     const q = query.trim().toLowerCase()
     if (q) {
@@ -62,12 +57,39 @@ export function AteliersPage() {
     return items
   }, [query, ville, specialite, verifiesOnly, sort])
 
-  const hasActiveFilters =
+  const hasFilters =
     query.trim() !== '' ||
     ville !== 'Toutes' ||
     specialite !== 'Toutes' ||
     verifiesOnly ||
     sort !== 'note'
+
+  function syncParams(next: {
+    q?: string
+    ville?: string
+    specialite?: string
+    verifie?: boolean
+    tri?: SortKey
+  }) {
+    const params = new URLSearchParams()
+    const q = next.q ?? query
+    const v = next.ville ?? ville
+    const s = next.specialite ?? specialite
+    const ver = next.verifie ?? verifiesOnly
+    const tri = next.tri ?? sort
+
+    if (q.trim()) params.set('q', q.trim())
+    if (v !== 'Toutes') params.set('ville', v)
+    if (s !== 'Toutes') params.set('specialite', s)
+    if (ver) params.set('verifie', '1')
+    if (tri !== 'note') params.set('tri', tri)
+    setSearchParams(params, { replace: true })
+  }
+
+  function onSearchSubmit(event: FormEvent) {
+    event.preventDefault()
+    syncParams({ q: query })
+  }
 
   function resetFilters() {
     setQuery('')
@@ -78,142 +100,157 @@ export function AteliersPage() {
     setSearchParams({}, { replace: true })
   }
 
-  function syncParams(nextQuery: string, nextVille: string) {
-    const next = new URLSearchParams()
-    if (nextQuery.trim()) next.set('q', nextQuery.trim())
-    if (nextVille !== 'Toutes') next.set('ville', nextVille)
-    setSearchParams(next, { replace: true })
-  }
-
   return (
     <div className="bg-page">
-      <section className="relative overflow-hidden border-b border-line bg-white">
-        <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-primary/5 blur-3xl" />
-        <div className="pointer-events-none absolute -left-10 bottom-0 h-40 w-40 rounded-full bg-gold/10 blur-2xl" />
+      <DocumentMeta
+        title="Stylistes"
+        description="Trouvez des couturières et stylistes au Bénin. Filtrez par ville et spécialité, puis contactez-les sur WhatsApp."
+        path={`/ateliers${searchParams.toString() ? `?${searchParams}` : ''}`}
+      />
 
-        <div className="relative mx-auto max-w-7xl px-4 py-8 lg:px-8 lg:py-12">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gold">
-            Stylistes
-          </p>
-          <h1 className="font-display mt-2 max-w-xl text-3xl font-semibold text-primary sm:text-4xl">
-            Trouvez l&apos;atelier qui vous ressemble
-          </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted sm:text-base">
-            Parcourez les profils de couturières et stylistes, filtrez par ville ou
-            spécialité, puis contactez-les pour une confection sur mesure.
-          </p>
+      <section className="border-b border-line bg-white">
+        <div className="mx-auto max-w-7xl px-4 pt-5 pb-4 lg:px-8 lg:pt-8 lg:pb-5">
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <h1 className="font-display text-2xl font-semibold text-primary sm:text-3xl">
+                Stylistes
+              </h1>
+              <p className="mt-1 text-sm text-muted">
+                Filtrez par ville et contactez directement sur WhatsApp
+              </p>
+            </div>
+            <p className="shrink-0 pb-0.5 text-sm text-muted">
+              <span className="font-semibold text-primary">{filtered.length}</span>
+              <span className="hidden sm:inline">
+                {' '}
+                atelier{filtered.length > 1 ? 's' : ''}
+              </span>
+            </p>
+          </div>
 
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <label className="relative flex-1">
+          <form onSubmit={onSearchSubmit} className="mt-4">
+            <label className="relative block">
               <span className="sr-only">Rechercher un atelier</span>
-              <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted" />
+              <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted" />
               <input
                 type="search"
                 value={query}
-                onChange={(e) => {
-                  setQuery(e.target.value)
-                  syncParams(e.target.value, ville)
-                }}
+                onChange={(e) => setQuery(e.target.value)}
                 placeholder="Nom, spécialité, quartier, ville…"
-                className="input input-bordered h-12 w-full rounded-xl border-line bg-page pl-10 focus:border-primary focus:outline-none"
+                className="h-11 w-full rounded-xl border border-line bg-page py-2 pr-12 pl-10 text-sm text-heading outline-none transition placeholder:text-muted focus:border-primary focus-visible:ring-2 focus-visible:ring-primary/30"
               />
+              <button
+                type="submit"
+                className="absolute top-1/2 right-1.5 grid size-8 -translate-y-1/2 place-items-center rounded-lg bg-primary text-white"
+                aria-label="Lancer la recherche"
+              >
+                <Search className="size-3.5" />
+              </button>
             </label>
-            {hasActiveFilters && (
+          </form>
+        </div>
+
+        <div className="border-t border-line/70 bg-page/60">
+          <div className="mx-auto max-w-7xl px-4 py-3 lg:px-8">
+            <div className="flex gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {SPECIALITES.map((item) => {
+                const active = specialite === item
+                return (
+                  <button
+                    key={item}
+                    type="button"
+                    onClick={() => {
+                      setSpecialite(item)
+                      syncParams({ specialite: item })
+                    }}
+                    className={[
+                      'inline-flex h-9 shrink-0 items-center rounded-full px-3.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
+                      active
+                        ? 'bg-primary text-white shadow-sm'
+                        : 'border border-line bg-white text-heading hover:border-primary/35',
+                    ].join(' ')}
+                  >
+                    {item === 'Toutes' ? 'Toutes spécialités' : item}
+                  </button>
+                )
+              })}
+            </div>
+
+            <div className="mt-2.5 flex items-center gap-2">
+              <div className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {['Toutes', ...ATELIER_VILLES].map((v) => {
+                  const active = ville === v
+                  return (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => {
+                        setVille(v)
+                        syncParams({ ville: v })
+                      }}
+                      className={[
+                        'inline-flex h-7 shrink-0 items-center rounded-full px-2.5 text-xs font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
+                        active
+                          ? 'bg-primary/10 text-primary'
+                          : 'text-muted hover:bg-white hover:text-heading',
+                      ].join(' ')}
+                    >
+                      {v === 'Toutes' ? 'Toutes villes' : v}
+                    </button>
+                  )
+                })}
+              </div>
+
               <button
                 type="button"
-                onClick={resetFilters}
-                className="btn h-12 min-h-12 rounded-xl border border-line bg-white text-heading"
+                onClick={() => {
+                  const next = !verifiesOnly
+                  setVerifiesOnly(next)
+                  syncParams({ verifie: next })
+                }}
+                className={[
+                  'inline-flex h-7 shrink-0 items-center gap-1 rounded-full px-2.5 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
+                  verifiesOnly
+                    ? 'bg-primary text-white'
+                    : 'border border-line bg-white text-heading',
+                ].join(' ')}
+                aria-pressed={verifiesOnly}
               >
-                <X className="size-4" />
-                Réinitialiser
+                <BadgeCheck className="size-3.5" aria-hidden />
+                Vérifiés
               </button>
-            )}
-          </div>
 
-          <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
-            {SPECIALITES.map((item) => {
-              const active = specialite === item
-              return (
+              <select
+                className="h-7 shrink-0 rounded-full border border-line bg-white px-2.5 text-xs text-heading outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                value={sort}
+                aria-label="Trier les ateliers"
+                onChange={(e) => {
+                  const tri = e.target.value as SortKey
+                  setSort(tri)
+                  syncParams({ tri })
+                }}
+              >
+                <option value="note">Notes</option>
+                <option value="creations">Créations</option>
+                <option value="nom">A → Z</option>
+              </select>
+
+              {hasFilters ? (
                 <button
-                  key={item}
                   type="button"
-                  onClick={() => setSpecialite(item)}
-                  className={[
-                    'btn btn-sm h-9 min-h-9 shrink-0 rounded-full px-4',
-                    active
-                      ? 'btn-primary border-primary'
-                      : 'border border-line bg-white text-heading hover:border-primary/40',
-                  ].join(' ')}
+                  onClick={resetFilters}
+                  className="grid size-7 shrink-0 place-items-center rounded-full border border-line bg-white text-muted hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  aria-label="Réinitialiser les filtres"
                 >
-                  {item === 'Toutes' ? 'Toutes spécialités' : item}
+                  <X className="size-3.5" />
                 </button>
-              )
-            })}
+              ) : null}
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-6 lg:px-8 lg:py-8">
-        <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-line bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap items-center gap-2">
-            {VILLES.map((v) => {
-              const active = ville === v
-              return (
-                <button
-                  key={v}
-                  type="button"
-                  onClick={() => {
-                    setVille(v)
-                    syncParams(query, v)
-                  }}
-                  className={[
-                    'btn btn-xs h-8 min-h-8 rounded-full px-3',
-                    active
-                      ? 'btn-primary'
-                      : 'border border-line bg-page text-heading hover:border-primary/30',
-                  ].join(' ')}
-                >
-                  {v === 'Toutes' ? 'Toutes villes' : v}
-                </button>
-              )
-            })}
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setVerifiesOnly((v) => !v)}
-              className={[
-                'btn btn-sm h-9 min-h-9 gap-1.5 rounded-full',
-                verifiesOnly
-                  ? 'btn-primary'
-                  : 'border border-line bg-page text-heading',
-              ].join(' ')}
-            >
-              <BadgeCheck className="size-3.5" />
-              Vérifiés
-            </button>
-
-            <label className="flex items-center gap-2 text-sm text-muted">
-              Trier
-              <select
-                className="select select-sm select-bordered rounded-lg border-line bg-page"
-                value={sort}
-                onChange={(e) => setSort(e.target.value as SortKey)}
-              >
-                <option value="note">Mieux notés</option>
-                <option value="creations">Plus de créations</option>
-                <option value="nom">Nom A → Z</option>
-              </select>
-            </label>
-
-            <p className="text-sm text-muted">
-              <span className="font-semibold text-primary">{filtered.length}</span> atelier
-              {filtered.length > 1 ? 's' : ''}
-            </p>
-          </div>
-        </div>
-
+      <section className="mx-auto max-w-7xl px-4 py-5 lg:px-8 lg:py-7">
         {filtered.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-line bg-white px-6 py-16 text-center">
             <Sparkles className="mx-auto size-8 text-gold" aria-hidden />
@@ -255,10 +292,10 @@ export function AteliersPage() {
             </p>
           </div>
           <Link
-            to="/inscription"
+            to="/espace-styliste"
             className="btn mt-5 border-0 bg-gold text-heading hover:bg-[#e8d5b5] sm:mt-0"
           >
-            Devenir styliste
+            Espace styliste
           </Link>
         </div>
       </section>

@@ -1,19 +1,18 @@
 /** Incrémente à chaque mise à jour visible pour les utilisateurs. */
-export const APP_VERSION = '1.1.0'
+export const APP_VERSION = '1.2.0'
 
 export const WHATS_NEW = [
   {
-    title: 'Installer Couturia',
-    description:
-      'Ajoutez l’app sur l’écran d’accueil depuis le menu ☰ → Installer l’application.',
+    title: 'Espace styliste',
+    description: 'Publiez et modifiez vos créations depuis /espace-styliste (démo locale).',
   },
   {
-    title: 'Favoris et recherche',
-    description: 'Enregistrez vos pièces préférées et retrouvez-les rapidement.',
+    title: 'SEO et partage',
+    description: 'Titres, descriptions et aperçus plus propres pour WhatsApp/Facebook.',
   },
   {
-    title: 'Contact WhatsApp',
-    description: 'Contactez directement les ateliers avec un message prérempli.',
+    title: 'Stylistes allégés',
+    description: 'Filtres plus compacts, URL mémorisées, page 404 soignée.',
   },
 ] as const
 

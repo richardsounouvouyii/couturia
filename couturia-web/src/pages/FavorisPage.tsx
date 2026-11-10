@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Heart } from 'lucide-react'
 import { CreationCard } from '@/components/CreationCard'
+import { DocumentMeta } from '@/components/DocumentMeta'
 import { useFavorites } from '@/lib/favorites'
 import { MOCK_CREATIONS } from '@/lib/mock-data'
 
@@ -10,6 +11,12 @@ export function FavorisPage() {
 
   return (
     <div className="bg-page">
+      <DocumentMeta
+        title="Favoris"
+        description="Vos créations enregistrées sur Couturia."
+        path="/favoris"
+        noIndex
+      />
       <section className="border-b border-line bg-white">
         <div className="mx-auto max-w-7xl px-4 py-8 lg:px-8 lg:py-10">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gold">

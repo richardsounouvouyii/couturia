@@ -15,6 +15,7 @@ import {
   Sparkles,
 } from 'lucide-react'
 import { CreationCard } from '@/components/CreationCard'
+import { DocumentMeta } from '@/components/DocumentMeta'
 import atelierImage from '@/assets/images/atelier.jpg'
 import heroImage from '@/assets/images/hero.jpg'
 import {
@@ -56,6 +57,11 @@ export function HomePage() {
 
   return (
     <div>
+      <DocumentMeta
+        title="Couturia"
+        description="Vitrine des couturières et stylistes au Bénin. Découvrez des créations et contactez les ateliers sur WhatsApp."
+        path="/"
+      />
       {/* Hero */}
       <section className="relative overflow-hidden bg-page">
         <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-secondary/10 blur-3xl" />
@@ -247,10 +253,10 @@ export function HomePage() {
               Exposez vos créations et développez votre clientèle.
             </p>
             <Link
-              to="/inscription"
+              to="/espace-styliste"
               className="btn mt-5 border-0 bg-gold text-heading hover:bg-gold-soft"
             >
-              Devenir styliste
+              Espace styliste
               <ArrowRight className="size-4" />
             </Link>
           </div>

@@ -37,11 +37,14 @@ export function Footer() {
           <p className="mb-1 text-sm font-semibold uppercase tracking-[0.16em] text-[#e8d5b5]">
             Stylistes
           </p>
+          <Link to="/espace-styliste" className="text-white/90 transition hover:text-white">
+            Espace styliste
+          </Link>
           <Link to="/inscription" className="text-white/90 transition hover:text-white">
             Devenir styliste
           </Link>
           <Link to="/connexion" className="text-white/90 transition hover:text-white">
-            Espace styliste
+            Connexion
           </Link>
         </nav>
 

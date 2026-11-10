@@ -118,6 +118,12 @@ export function Navbar() {
               ) : null}
             </Link>
             <Link
+              to="/espace-styliste"
+              className="btn btn-sm hidden border border-primary/20 bg-white text-primary hover:bg-primary/5 sm:inline-flex"
+            >
+              Espace styliste
+            </Link>
+            <Link
               to="/inscription"
               className="btn btn-primary btn-sm hidden sm:inline-flex"
             >
@@ -194,6 +200,13 @@ export function Navbar() {
                 </button>
               ) : null}
               <NavLink
+                to="/espace-styliste"
+                className={mobileLinkClass}
+                onClick={() => setMenuOpen(false)}
+              >
+                Espace styliste
+              </NavLink>
+              <NavLink
                 to="/inscription"
                 className={mobileLinkClass}
                 onClick={() => setMenuOpen(false)}
@@ -205,7 +218,7 @@ export function Navbar() {
                 className={mobileLinkClass}
                 onClick={() => setMenuOpen(false)}
               >
-                Espace styliste
+                Connexion styliste
               </NavLink>
             </nav>
           </div>
