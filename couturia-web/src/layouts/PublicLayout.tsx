@@ -9,7 +9,7 @@ import { WhatsNewModal } from '@/components/WhatsNewModal'
 
 export function PublicLayout() {
   return (
-    <div className="min-h-screen flex flex-col bg-page text-heading">
+    <div className="relative z-[1] flex min-h-screen flex-col bg-page text-heading">
       <ScrollToTop />
       <Navbar />
       <main className="flex-1">
