@@ -1,0 +1,1 @@
+"""Couturia atelier-service."""

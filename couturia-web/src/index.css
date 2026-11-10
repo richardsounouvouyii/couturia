@@ -1,0 +1,58 @@
+@import "tailwindcss";
+@import "./styles/theme.css";
+
+@plugin "daisyui" {
+  themes: couturia --default;
+}
+
+@plugin "daisyui/theme" {
+  name: "couturia";
+  default: true;
+  prefersdark: false;
+  color-scheme: light;
+
+  /* Bordeaux maquette : #700D39 */
+  --color-base-100: #fcf8f5;
+  --color-base-200: #f4ebe2;
+  --color-base-300: #eadfe4;
+  --color-base-content: #2e0314;
+
+  --color-primary: #700d39;
+  --color-primary-content: #ffffff;
+
+  --color-secondary: #9a184f;
+  --color-secondary-content: #ffffff;
+
+  --color-accent: #b38b59;
+  --color-accent-content: #2e0314;
+
+  --color-neutral: #4a0826;
+  --color-neutral-content: #fcf8f5;
+
+  --color-info: #5b7c99;
+  --color-success: #3d7a5c;
+  --color-warning: #b38b59;
+  --color-error: #700d39;
+
+  --radius-selector: 999px;
+  --radius-field: 0.75rem;
+  --radius-box: 1rem;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  background-color: var(--color-page);
+  color: var(--color-heading);
+  font-family: var(--font-sans);
+}
+
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-display);
+}

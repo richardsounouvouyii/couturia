@@ -1,0 +1,1 @@
+"""Couturia catalogue-service."""

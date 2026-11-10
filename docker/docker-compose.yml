@@ -1,0 +1,120 @@
+name: couturia
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: couturia-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-couturia}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-couturia_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-couturia} -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: couturia-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-couturia}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-couturia_dev}
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ./rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  auth-service:
+    build:
+      context: ../couturia-api/auth-service
+      dockerfile: Dockerfile
+    container_name: couturia-auth-service
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      AUTH_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-couturia}:${POSTGRES_PASSWORD:-couturia_dev}@postgres:5432/auth_db
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-couturia}:${RABBITMQ_PASSWORD:-couturia_dev}@rabbitmq:5672/
+      AUTH_SERVICE_PORT: "8001"
+    ports:
+      - "${AUTH_SERVICE_PORT:-8001}:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  atelier-service:
+    build:
+      context: ../couturia-api/atelier-service
+      dockerfile: Dockerfile
+    container_name: couturia-atelier-service
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      ATELIER_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-couturia}:${POSTGRES_PASSWORD:-couturia_dev}@postgres:5432/atelier_db
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-couturia}:${RABBITMQ_PASSWORD:-couturia_dev}@rabbitmq:5672/
+      ATELIER_SERVICE_PORT: "8002"
+    ports:
+      - "${ATELIER_SERVICE_PORT:-8002}:8002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8002/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  catalogue-service:
+    build:
+      context: ../couturia-api/catalogue-service
+      dockerfile: Dockerfile
+    container_name: couturia-catalogue-service
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      CATALOGUE_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-couturia}:${POSTGRES_PASSWORD:-couturia_dev}@postgres:5432/catalogue_db
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-couturia}:${RABBITMQ_PASSWORD:-couturia_dev}@rabbitmq:5672/
+      CATALOGUE_SERVICE_PORT: "8003"
+    ports:
+      - "${CATALOGUE_SERVICE_PORT:-8003}:8003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8003/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:
+  rabbitmq_data:

@@ -1,0 +1,50 @@
+{
+  "users": [],
+  "vhosts": [{ "name": "/" }],
+  "permissions": [],
+  "exchanges": [
+    {
+      "name": "couture.events",
+      "vhost": "/",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    }
+  ],
+  "queues": [
+    {
+      "name": "notification.utilisateur.inscrit",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    },
+    {
+      "name": "commande.devis.accepte",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    }
+  ],
+  "bindings": [
+    {
+      "source": "couture.events",
+      "vhost": "/",
+      "destination": "notification.utilisateur.inscrit",
+      "destination_type": "queue",
+      "routing_key": "utilisateur.inscrit",
+      "arguments": {}
+    },
+    {
+      "source": "couture.events",
+      "vhost": "/",
+      "destination": "commande.devis.accepte",
+      "destination_type": "queue",
+      "routing_key": "devis.accepte",
+      "arguments": {}
+    }
+  ]
+}

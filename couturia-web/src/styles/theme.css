@@ -1,0 +1,78 @@
+/*
+  Palette extraite de la maquette accueil Couturia
+  Bordeaux / or / crème
+*/
+@theme {
+  --color-primary: #700d39;
+  --color-primary-dark: #4a0826;
+  --color-primary-bright: #9a184f;
+  --color-secondary: #9a184f;
+  --color-gold: #b38b59;
+  --color-gold-soft: #e8d5b5;
+  --color-gold-muted: #c5a070;
+
+  --color-page: #fcf8f5;
+  --color-ribbon: #f4ebe2;
+  --color-card: #ffffff;
+  --color-heading: #700d39;
+  --color-muted: #6b5a60;
+  --color-line: #eadfe4;
+
+  --font-sans: "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Playfair Display", Georgia, serif;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes soft-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.7s ease-out both;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.8s ease-out both;
+}
+
+.animate-float {
+  animation: soft-float 5s ease-in-out infinite;
+}
+
+.delay-100 {
+  animation-delay: 0.1s;
+}
+.delay-200 {
+  animation-delay: 0.2s;
+}
+.delay-300 {
+  animation-delay: 0.3s;
+}
+.delay-400 {
+  animation-delay: 0.4s;
+}
