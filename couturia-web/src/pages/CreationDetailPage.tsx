@@ -1,6 +1,15 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, House, Images, MapPin, MessageCircle, Share2, Star } from 'lucide-react'
+import {
+  ArrowLeft,
+  House,
+  Images,
+  MapPin,
+  MessageCircle,
+  Phone,
+  Share2,
+  Star,
+} from 'lucide-react'
 import { CreationGalleryModal } from '@/components/CreationGalleryModal'
 import {
   CreationTurnViewer,
@@ -9,7 +18,7 @@ import {
 import { DocumentMeta } from '@/components/DocumentMeta'
 import { FavoriteButton } from '@/components/FavoriteButton'
 import { WhatsAppButton } from '@/components/WhatsAppButton'
-import { formatFcfa } from '@/lib/format'
+import { formatFcfa, formatPhoneDisplay } from '@/lib/format'
 import { resolvePublicCreationById } from '@/lib/catalogue'
 import { getAtelierById, getCreationImages, getCreationPhotoLabels } from '@/lib/mock-data'
 import { facebookShareUrl, nativeShare, whatsappShareUrl } from '@/lib/share'
@@ -158,17 +167,31 @@ export function CreationDetailPage() {
               {creation.titre}
             </h1>
 
-            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted sm:mt-4 sm:gap-4 sm:text-sm">
-              <span className="inline-flex items-center gap-1.5">
-                <House className="size-3.5 text-primary sm:size-4" aria-hidden />
-                {creation.atelier}
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <MapPin className="size-3.5 text-primary sm:size-4" aria-hidden />
-                {creation.ville}
-              </span>
+            <div className="mt-3 space-y-1.5 text-xs text-muted sm:mt-4 sm:text-sm">
+              <p className="inline-flex flex-wrap items-center gap-1.5">
+                <House className="size-3.5 shrink-0 text-primary sm:size-4" aria-hidden />
+                <span className="text-heading/70">Atelier</span>
+                <span className="font-semibold text-heading">{creation.atelier}</span>
+              </p>
+              <p className="inline-flex flex-wrap items-center gap-1.5">
+                <MapPin className="size-3.5 shrink-0 text-primary sm:size-4" aria-hidden />
+                <span className="text-heading/70">Ville</span>
+                <span className="font-medium text-heading">{creation.ville}</span>
+              </p>
+              {contactPhone ? (
+                <p className="inline-flex flex-wrap items-center gap-1.5">
+                  <Phone className="size-3.5 shrink-0 text-primary sm:size-4" aria-hidden />
+                  <span className="text-heading/70">Téléphone</span>
+                  <a
+                    href={`tel:${contactPhone.replace(/\s/g, '')}`}
+                    className="font-semibold text-primary underline-offset-2 hover:underline"
+                  >
+                    {formatPhoneDisplay(contactPhone)}
+                  </a>
+                </p>
+              ) : null}
               {creation.ratingsDemo ? (
-                <span className="rounded-full bg-ribbon px-2 py-0.5 text-[10px] font-semibold text-primary">
+                <span className="inline-flex rounded-full bg-ribbon px-2 py-0.5 text-[10px] font-semibold text-primary">
                   Nouvelle publication · démo
                 </span>
               ) : (

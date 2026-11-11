@@ -51,10 +51,15 @@ export function CreationsPage() {
   }, [])
 
   const filtered = useMemo(() => {
-    let items = listPublicCreations()
+    let items = [...listPublicCreations()]
 
     if (category !== 'tous') {
-      items = items.filter((item) => item.categorie.toLowerCase() === category)
+      const catLabel = MOCK_CATEGORIES.find((c) => c.id === category)?.label
+      items = items.filter((item) =>
+        catLabel
+          ? item.categorie === catLabel
+          : item.categorie.toLowerCase() === category,
+      )
     }
 
     if (ville !== 'Toutes') {
@@ -72,19 +77,30 @@ export function CreationsPage() {
       )
     }
 
+    function recentScore(id: string, updatedAt?: string) {
+      const fromDate = Date.parse(updatedAt ?? '') || 0
+      // ids `sc-1731…` = Date.now() à la création
+      const fromId = id.startsWith('sc-') ? Number(id.slice(3)) || 0 : 0
+      return Math.max(fromDate, fromId)
+    }
+
     items.sort((a, b) => {
       switch (sort) {
         case 'prix-asc':
-          return (a.prixIndicatif ?? 0) - (b.prixIndicatif ?? 0)
+          return (a.prixIndicatif ?? Number.POSITIVE_INFINITY) - (b.prixIndicatif ?? Number.POSITIVE_INFINITY)
         case 'prix-desc':
-          return (b.prixIndicatif ?? 0) - (a.prixIndicatif ?? 0)
+          return (b.prixIndicatif ?? -1) - (a.prixIndicatif ?? -1)
         case 'note':
-          return b.note - a.note
+          if (b.note !== a.note) return b.note - a.note
+          return b.avis - a.avis
         case 'recent':
         default: {
-          const aTime = Date.parse(a.updatedAt ?? '') || 0
-          const bTime = Date.parse(b.updatedAt ?? '') || 0
-          return bTime - aTime
+          const diff = recentScore(b.id, b.updatedAt) - recentScore(a.id, a.updatedAt)
+          if (diff !== 0) return diff
+          // Les publications styliste passent devant en cas d’égalité
+          const aNew = a.id.startsWith('sc-') || a.ratingsDemo ? 1 : 0
+          const bNew = b.id.startsWith('sc-') || b.ratingsDemo ? 1 : 0
+          return bNew - aNew
         }
       }
     })

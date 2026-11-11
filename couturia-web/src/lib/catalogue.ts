@@ -19,9 +19,17 @@ export function listPublicCreations(): MockCreation[] {
   // Les nouvelles pièces styliste passent devant
   for (const item of stylistPublished) byId.set(item.id, item)
 
+  function recentScore(id: string, updatedAt?: string) {
+    const fromDate = Date.parse(updatedAt ?? '') || 0
+    const fromId = id.startsWith('sc-') ? Number(id.slice(3)) || 0 : 0
+    return Math.max(fromDate, fromId)
+  }
+
   return Array.from(byId.values()).sort((a, b) => {
-    const aStylist = a.id.startsWith('sc-') ? 1 : 0
-    const bStylist = b.id.startsWith('sc-') ? 1 : 0
+    const diff = recentScore(b.id, b.updatedAt) - recentScore(a.id, a.updatedAt)
+    if (diff !== 0) return diff
+    const aStylist = a.id.startsWith('sc-') || a.ratingsDemo ? 1 : 0
+    const bStylist = b.id.startsWith('sc-') || b.ratingsDemo ? 1 : 0
     if (aStylist !== bStylist) return bStylist - aStylist
     return a.titre.localeCompare(b.titre, 'fr')
   })

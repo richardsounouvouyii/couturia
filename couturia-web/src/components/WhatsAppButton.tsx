@@ -1,4 +1,5 @@
 import { MessageCircle } from 'lucide-react'
+import { formatPhoneDisplay } from '@/lib/format'
 import {
   buildWhatsAppUrl,
   isDemoWhatsApp,
@@ -54,9 +55,10 @@ export function WhatsAppButton({
         <MessageCircle className="size-4" aria-hidden />
         {label}
       </a>
-      {demo ? (
+      {phone ? (
         <p className="mt-2 text-xs text-muted">
-          Numéro de démonstration — remplacez-le par le vrai WhatsApp de l&apos;atelier.
+          {formatPhoneDisplay(phone)}
+          {demo ? ' · numéro de démonstration' : ''}
         </p>
       ) : null}
     </div>

@@ -1,4 +1,4 @@
-import { House, MessageCircle, RotateCw, Star } from 'lucide-react'
+import { House, MapPin, MessageCircle, RotateCw, Star } from 'lucide-react'
 import { FavoriteButton } from '@/components/FavoriteButton'
 import { TURN_360_MIN_FRAMES } from '@/components/CreationTurnViewer'
 import type { MockCreation } from '@/lib/mock-data'
@@ -72,23 +72,30 @@ export function CreationCard({ creation }: Props) {
         <h3 className="font-display text-[15px] font-semibold leading-snug text-heading line-clamp-2">
           {creation.titre}
         </h3>
-        <p className="inline-flex items-center gap-1.5 text-xs text-muted">
-          <House className="size-3.5 text-primary" aria-hidden />
-          {creation.atelier}
+        <p className="inline-flex min-w-0 items-center gap-1.5 text-xs text-muted">
+          <House className="size-3.5 shrink-0 text-primary" aria-hidden />
+          <span className="truncate font-medium text-heading">{creation.atelier}</span>
+          <span className="shrink-0 text-line" aria-hidden>
+            ·
+          </span>
+          <MapPin className="size-3 shrink-0 text-primary" aria-hidden />
+          <span className="truncate">{creation.ville}</span>
         </p>
-        <div className="flex items-center justify-between gap-2 pt-0.5 text-xs sm:text-sm">
+        <div className="flex items-center justify-between gap-1.5 pt-0.5 text-xs">
           {creation.ratingsDemo ? (
-            <span className="rounded-full bg-ribbon px-2 py-0.5 text-[10px] font-semibold text-primary">
+            <span className="min-w-0 truncate rounded-full bg-ribbon px-2 py-0.5 text-[10px] font-semibold text-primary">
               Nouveau · démo
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 text-heading/80">
-              <Star className="size-3.5 fill-gold text-gold" aria-hidden />
-              {creation.note.toFixed(1).replace('.', ',')} ({creation.avis})
+            <span className="inline-flex min-w-0 items-center gap-1 text-heading/80">
+              <Star className="size-3.5 shrink-0 fill-gold text-gold" aria-hidden />
+              <span className="truncate">
+                {creation.note.toFixed(1).replace('.', ',')} ({creation.avis})
+              </span>
             </span>
           )}
           {creation.prixIndicatif != null && (
-            <span className="shrink-0 font-semibold text-primary">
+            <span className="shrink-0 font-semibold tabular-nums text-primary">
               {formatFcfa(creation.prixIndicatif)}
             </span>
           )}
