@@ -22,7 +22,7 @@ export function StylistCreationsPage() {
       />
 
       <section className="border-b border-line bg-surface">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6 sm:flex-row sm:items-end sm:justify-between lg:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-5 sm:flex-row sm:items-end sm:justify-between lg:px-8 lg:py-6">
           <div>
             <h1 className="font-display text-2xl font-semibold text-primary sm:text-3xl">
               Mes créations
@@ -33,7 +33,7 @@ export function StylistCreationsPage() {
           </div>
           <Link
             to="/espace-styliste/creations/nouvelle"
-            className="btn btn-primary rounded-xl gap-2"
+            className="btn btn-primary h-11 min-h-11 w-full rounded-xl gap-2 sm:w-auto"
           >
             <Plus className="size-4" aria-hidden />
             Nouvelle création
@@ -63,7 +63,7 @@ export function StylistCreationsPage() {
                 className="flex flex-col gap-3 rounded-2xl border border-line bg-white p-3 sm:flex-row sm:items-center sm:p-4"
               >
                 <img
-                  src={item.image}
+                  src={item.images[0]}
                   alt=""
                   className="h-24 w-full rounded-xl object-cover sm:h-20 sm:w-20"
                   loading="lazy"
@@ -83,6 +83,11 @@ export function StylistCreationsPage() {
                     >
                       {item.published ? 'Publiée' : 'Brouillon'}
                     </span>
+                    {item.images.length > 1 ? (
+                      <span className="rounded-full bg-ribbon px-2 py-0.5 text-[11px] font-medium text-muted">
+                        {item.images.length} photos
+                      </span>
+                    ) : null}
                   </div>
                   <p className="mt-1 text-sm text-muted">
                     {item.categorie} · {item.ville}

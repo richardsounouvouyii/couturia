@@ -1,8 +1,9 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
-import { Download, Heart, Menu, Search, X } from 'lucide-react'
+import { Download, Heart, LayoutGrid, LogOut, Menu, Search, X } from 'lucide-react'
 import logo from '@/assets/images/logo.png'
 import { SearchOverlay } from '@/components/SearchOverlay'
+import { useAuthSession } from '@/lib/auth-session'
 import { useFavorites } from '@/lib/favorites'
 import { usePwaInstall } from '@/lib/pwa-install'
 
@@ -28,6 +29,7 @@ export function Navbar() {
   const buttonRef = useRef<HTMLButtonElement>(null)
   const location = useLocation()
   const { count } = useFavorites()
+  const { isAuthenticated, isStylist, user, signOut } = useAuthSession()
   const { canNativeInstall, isInstalled, openInstall, openBanner } = usePwaInstall()
 
   useEffect(() => {
@@ -85,9 +87,15 @@ export function Navbar() {
             <NavLink to="/ateliers" className={navLinkClass}>
               Stylistes
             </NavLink>
-            <NavLink to="/favoris" className={navLinkClass}>
-              Favoris
-            </NavLink>
+            {isStylist ? (
+              <NavLink to="/espace-styliste" className={navLinkClass}>
+                Ma vitrine
+              </NavLink>
+            ) : (
+              <NavLink to="/favoris" className={navLinkClass}>
+                Favoris
+              </NavLink>
+            )}
             <a href="/#a-propos" className={navLinkClass({ isActive: false })}>
               À propos
             </a>
@@ -105,30 +113,61 @@ export function Navbar() {
             >
               <Search className="size-5" />
             </button>
-            <Link
-              to="/favoris"
-              className="btn btn-ghost btn-square relative text-heading"
-              aria-label="Favoris"
-            >
-              <Heart className="size-5" />
-              {count > 0 ? (
-                <span className="absolute top-1 right-1 grid min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] font-semibold text-white">
-                  {count}
+
+            {isStylist ? (
+              <Link
+                to="/espace-styliste"
+                className="btn btn-ghost btn-square text-heading"
+                aria-label="Gérer ma vitrine"
+              >
+                <LayoutGrid className="size-5" />
+              </Link>
+            ) : (
+              <Link
+                to="/favoris"
+                className="btn btn-ghost btn-square relative text-heading"
+                aria-label="Favoris"
+              >
+                <Heart className="size-5" />
+                {count > 0 ? (
+                  <span className="absolute top-1 right-1 grid min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] font-semibold text-white">
+                    {count}
+                  </span>
+                ) : null}
+              </Link>
+            )}
+
+            {isAuthenticated ? (
+              <>
+                <span className="hidden max-w-[9rem] truncate text-sm font-medium text-heading sm:inline">
+                  {user?.atelierName || user?.fullName}
                 </span>
-              ) : null}
-            </Link>
-            <Link
-              to="/espace-styliste"
-              className="btn btn-sm hidden border border-primary/20 bg-white text-primary hover:bg-primary/5 sm:inline-flex"
-            >
-              Espace styliste
-            </Link>
-            <Link
-              to="/inscription"
-              className="btn btn-primary btn-sm hidden sm:inline-flex"
-            >
-              Devenir styliste
-            </Link>
+                <button
+                  type="button"
+                  className="btn btn-sm hidden border border-primary/20 bg-white text-primary hover:bg-primary/5 sm:inline-flex"
+                  onClick={() => signOut()}
+                >
+                  <LogOut className="size-3.5" />
+                  Déconnexion
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/connexion"
+                  className="btn btn-sm hidden border border-primary/20 bg-white text-primary hover:bg-primary/5 sm:inline-flex"
+                >
+                  Connexion
+                </Link>
+                <Link
+                  to="/inscription"
+                  className="btn btn-primary btn-sm hidden sm:inline-flex"
+                >
+                  S&apos;inscrire
+                </Link>
+              </>
+            )}
+
             <button
               ref={buttonRef}
               type="button"
@@ -167,13 +206,23 @@ export function Navbar() {
               >
                 Stylistes
               </NavLink>
-              <NavLink
-                to="/favoris"
-                className={mobileLinkClass}
-                onClick={() => setMenuOpen(false)}
-              >
-                Favoris {count > 0 ? `(${count})` : ''}
-              </NavLink>
+              {isStylist ? (
+                <NavLink
+                  to="/espace-styliste"
+                  className={mobileLinkClass}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Ma vitrine
+                </NavLink>
+              ) : (
+                <NavLink
+                  to="/favoris"
+                  className={mobileLinkClass}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Favoris {count > 0 ? `(${count})` : ''}
+                </NavLink>
+              )}
               <a
                 href="/#a-propos"
                 className={mobileLinkClass({ isActive: false })}
@@ -199,27 +248,43 @@ export function Navbar() {
                   Installer l&apos;application
                 </button>
               ) : null}
-              <NavLink
-                to="/espace-styliste"
-                className={mobileLinkClass}
-                onClick={() => setMenuOpen(false)}
-              >
-                Espace styliste
-              </NavLink>
-              <NavLink
-                to="/inscription"
-                className={mobileLinkClass}
-                onClick={() => setMenuOpen(false)}
-              >
-                Devenir styliste
-              </NavLink>
-              <NavLink
-                to="/connexion"
-                className={mobileLinkClass}
-                onClick={() => setMenuOpen(false)}
-              >
-                Connexion styliste
-              </NavLink>
+              {isAuthenticated ? (
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-heading hover:bg-page"
+                  onClick={() => {
+                    setMenuOpen(false)
+                    signOut()
+                  }}
+                >
+                  <LogOut className="size-4 text-primary" aria-hidden />
+                  Déconnexion
+                </button>
+              ) : (
+                <>
+                  <NavLink
+                    to="/connexion"
+                    className={mobileLinkClass}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Connexion
+                  </NavLink>
+                  <NavLink
+                    to="/inscription"
+                    className={mobileLinkClass}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    S&apos;inscrire
+                  </NavLink>
+                  <NavLink
+                    to="/inscription?role=styliste"
+                    className={mobileLinkClass}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Devenir styliste
+                  </NavLink>
+                </>
+              )}
             </nav>
           </div>
         ) : null}

@@ -1,11 +1,15 @@
 import { Link } from 'react-router-dom'
 import { Images, MessageCircle, Plus, Scissors } from 'lucide-react'
 import { DocumentMeta } from '@/components/DocumentMeta'
+import { useAuthSession } from '@/lib/auth-session'
 import { listStylistCreations, STYLIST_DEMO } from '@/lib/stylist-creations'
 
 export function EspaceStylistePage() {
+  const { user } = useAuthSession()
   const creations = listStylistCreations()
   const published = creations.filter((c) => c.published).length
+  const atelierName = user?.atelierName || user?.fullName || STYLIST_DEMO.atelierName
+  const phone = user?.phone
 
   return (
     <div className="bg-page">
@@ -17,25 +21,28 @@ export function EspaceStylistePage() {
       />
 
       <section className="border-b border-line bg-surface">
-        <div className="mx-auto max-w-7xl px-4 py-6 lg:px-8 lg:py-8">
+        <div className="mx-auto max-w-7xl px-4 py-5 lg:px-8 lg:py-7">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gold">
             Espace styliste · démo
           </p>
           <h1 className="font-display mt-2 text-2xl font-semibold text-primary sm:text-3xl">
-            {STYLIST_DEMO.atelierName}
+            {atelierName}
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-muted">
-            Prototype front : publiez et modifiez vos créations (sauvegardées sur cet
-            appareil). L&apos;API arrivera ensuite.
+            Publiez et modifiez vos créations (sauvegardées sur cet appareil).
+            {phone ? ` Contact WhatsApp : ${phone}.` : null}
           </p>
-          <div className="mt-5 flex flex-col gap-2 sm:flex-row">
-            <Link to="/espace-styliste/creations/nouvelle" className="btn btn-primary rounded-xl gap-2">
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+            <Link
+              to="/espace-styliste/creations/nouvelle"
+              className="btn btn-primary h-11 min-h-11 rounded-xl gap-2"
+            >
               <Plus className="size-4" aria-hidden />
               Nouvelle création
             </Link>
             <Link
               to="/espace-styliste/creations"
-              className="btn rounded-xl border border-line bg-white text-heading gap-2"
+              className="btn h-11 min-h-11 rounded-xl border border-line bg-white text-heading gap-2"
             >
               <Images className="size-4" aria-hidden />
               Mes créations

@@ -292,10 +292,10 @@ export function AteliersPage() {
             </p>
           </div>
           <Link
-            to="/espace-styliste"
+            to="/inscription?role=styliste"
             className="btn mt-5 border-0 bg-gold text-heading hover:bg-[#e8d5b5] sm:mt-0"
           >
-            Espace styliste
+            Devenir styliste
           </Link>
         </div>
       </section>

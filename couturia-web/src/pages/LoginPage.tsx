@@ -1,38 +1,70 @@
 import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Eye, EyeOff, LogIn } from 'lucide-react'
+import { AuthRoleToggle } from '@/components/AuthRoleToggle'
+import { DocumentMeta } from '@/components/DocumentMeta'
 import logo from '@/assets/images/logo.png'
+import { parseAuthRole, type AuthRole } from '@/lib/auth-role'
+import { useAuthSession } from '@/lib/auth-session'
 
 export function LoginPage() {
+  const navigate = useNavigate()
+  const { signIn } = useAuthSession()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const role = parseAuthRole(searchParams.get('role'))
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [message, setMessage] = useState<string | null>(null)
+
+  function setRole(next: AuthRole) {
+    setSearchParams(next === 'client' ? {} : { role: next }, { replace: true })
+  }
 
   function onSubmit(event: FormEvent) {
     event.preventDefault()
-    setMessage(
-      'Connexion styliste prête côté front. L’API auth-service sera branchée ensuite.',
-    )
+    const localPart = email.split('@')[0] || 'Compte'
+    signIn({
+      role,
+      fullName: localPart,
+      email: email.trim(),
+    })
+    navigate(role === 'styliste' ? '/espace-styliste' : '/catalogue')
   }
 
+  const isStylist = role === 'styliste'
+
   return (
-    <div className="bg-page px-4 py-10 lg:py-16">
+    <div className="bg-page px-4 pt-4 pb-8 sm:pt-6 lg:pt-8 lg:pb-12">
+      <DocumentMeta
+        title={isStylist ? 'Connexion styliste' : 'Connexion'}
+        description={
+          isStylist
+            ? 'Connectez-vous pour gérer votre vitrine Couturia.'
+            : 'Connectez-vous pour retrouver vos favoris et suivre les stylistes.'
+        }
+        path={`/connexion${isStylist ? '?role=styliste' : ''}`}
+        noIndex
+      />
+
       <div className="mx-auto w-full max-w-md">
-        <div className="mb-8 text-center">
-          <img src={logo} alt="Couturia" className="mx-auto h-14 w-auto object-contain" />
-          <h1 className="font-display mt-5 text-3xl font-semibold text-primary">
-            Espace styliste
+        <div className="mb-4 text-center">
+          <img src={logo} alt="Couturia" className="mx-auto h-11 w-auto object-contain sm:h-12" />
+          <h1 className="font-display mt-3 text-2xl font-semibold text-primary sm:text-3xl">
+            {isStylist ? 'Espace styliste' : 'Connexion'}
           </h1>
-          <p className="mt-2 text-sm text-muted">
-            Connectez-vous pour gérer votre vitrine. Les clients n&apos;ont pas besoin de
-            compte pour vous contacter.
+          <p className="mt-1.5 text-sm text-muted">
+            {isStylist
+              ? 'Gérez votre vitrine et vos créations.'
+              : 'Retrouvez les œuvres des stylistes et vos favoris.'}
           </p>
         </div>
 
+        <AuthRoleToggle value={role} onChange={setRole} />
+
         <form
           onSubmit={onSubmit}
-          className="rounded-2xl border border-line bg-white p-6 shadow-sm sm:p-8"
+          className="mt-3 rounded-2xl border border-line bg-white p-5 shadow-sm sm:p-6"
         >
           <label className="form-control w-full">
             <span className="label-text mb-1.5 text-sm font-medium text-heading">
@@ -49,7 +81,7 @@ export function LoginPage() {
             />
           </label>
 
-          <label className="form-control mt-4 w-full">
+          <label className="form-control mt-3.5 w-full">
             <span className="label-text mb-1.5 text-sm font-medium text-heading">
               Mot de passe
             </span>
@@ -81,22 +113,19 @@ export function LoginPage() {
             </button>
           </div>
 
-          {message && (
-            <p className="mt-4 rounded-xl bg-ribbon px-3 py-2 text-sm text-primary">
-              {message}
-            </p>
-          )}
-
-          <button type="submit" className="btn btn-primary mt-6 w-full gap-2 rounded-xl">
+          <button type="submit" className="btn btn-primary mt-5 w-full gap-2 rounded-xl">
             <LogIn className="size-4" />
             Se connecter
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-muted">
-          Pas encore de vitrine ?{' '}
-          <Link to="/inscription" className="font-semibold text-primary hover:underline">
-            Devenir styliste
+        <p className="mt-5 text-center text-sm text-muted">
+          Pas encore de compte ?{' '}
+          <Link
+            to={isStylist ? '/inscription?role=styliste' : '/inscription'}
+            className="font-semibold text-primary hover:underline"
+          >
+            {isStylist ? 'Devenir styliste' : 'Créer un compte'}
           </Link>
         </p>
       </div>

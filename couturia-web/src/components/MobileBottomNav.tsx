@@ -1,13 +1,7 @@
 import { NavLink } from 'react-router-dom'
-import { Heart, Home, Shirt, Store } from 'lucide-react'
+import { Heart, Home, LayoutGrid, Shirt, Store } from 'lucide-react'
+import { useAuthSession } from '@/lib/auth-session'
 import { useFavorites } from '@/lib/favorites'
-
-const items = [
-  { to: '/', label: 'Accueil', icon: Home, end: true },
-  { to: '/catalogue', label: 'Créations', icon: Shirt },
-  { to: '/ateliers', label: 'Stylistes', icon: Store },
-  { to: '/favoris', label: 'Favoris', icon: Heart },
-] as const
 
 function scrollToTop() {
   window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })
@@ -15,6 +9,21 @@ function scrollToTop() {
 
 export function MobileBottomNav() {
   const { count } = useFavorites()
+  const { isStylist } = useAuthSession()
+
+  const items = isStylist
+    ? ([
+        { to: '/', label: 'Accueil', icon: Home, end: true },
+        { to: '/catalogue', label: 'Créations', icon: Shirt },
+        { to: '/ateliers', label: 'Stylistes', icon: Store },
+        { to: '/espace-styliste', label: 'Ma vitrine', icon: LayoutGrid },
+      ] as const)
+    : ([
+        { to: '/', label: 'Accueil', icon: Home, end: true },
+        { to: '/catalogue', label: 'Créations', icon: Shirt },
+        { to: '/ateliers', label: 'Stylistes', icon: Store },
+        { to: '/favoris', label: 'Favoris', icon: Heart },
+      ] as const)
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-card/95 backdrop-blur-md lg:hidden">
@@ -34,7 +43,7 @@ export function MobileBottomNav() {
             >
               <span className="relative">
                 <Icon className="size-5" aria-hidden />
-                {to === '/favoris' && count > 0 ? (
+                {!isStylist && to === '/favoris' && count > 0 ? (
                   <span className="absolute -top-1.5 -right-2 grid min-w-4 place-items-center rounded-full bg-primary px-1 text-[9px] font-semibold text-white">
                     {count}
                   </span>

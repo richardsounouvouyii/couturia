@@ -124,7 +124,7 @@ export function HomePage() {
                 <ArrowRight className="size-4" aria-hidden />
               </Link>
               <Link
-                to="/inscription"
+                to="/inscription?role=styliste"
                 className="btn h-11 min-h-11 gap-2 rounded-xl border-2 border-gold bg-transparent text-heading hover:bg-gold/10"
               >
                 <Scissors className="size-4 text-gold" aria-hidden />

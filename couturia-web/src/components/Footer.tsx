@@ -40,7 +40,10 @@ export function Footer() {
           <Link to="/espace-styliste" className="text-white/90 transition hover:text-white">
             Espace styliste
           </Link>
-          <Link to="/inscription" className="text-white/90 transition hover:text-white">
+          <Link
+            to="/inscription?role=styliste"
+            className="text-white/90 transition hover:text-white"
+          >
             Devenir styliste
           </Link>
           <Link to="/connexion" className="text-white/90 transition hover:text-white">
