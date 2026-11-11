@@ -293,7 +293,7 @@ export function StylistCreationFormPage() {
 
             <label className="block w-full">
               <span className="mb-1.5 block text-sm font-medium text-heading">
-                Prix (FCFA)
+                Prix (F)
               </span>
               <input
                 type="text"
@@ -311,8 +311,8 @@ export function StylistCreationFormPage() {
                     e.preventDefault()
                   }
                 }}
-                placeholder="Ex. 25000"
-                className={fieldClass}
+                placeholder="Exemple : 25000"
+                className={`${fieldClass} placeholder:italic`}
                 autoComplete="off"
               />
             </label>
