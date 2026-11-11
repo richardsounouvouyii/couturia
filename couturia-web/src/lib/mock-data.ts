@@ -183,7 +183,35 @@ export const MOCK_CREATIONS: MockCreation[] = [
     note: 4.9,
     avis: 128,
     image: creation1,
-    images: [creation1, heroImage, creation4, atelierCover],
+    // Séquence démo « tour 360° » (ordre autour du vêtement)
+    images: [
+      creation1,
+      heroImage,
+      creation4,
+      atelierCover,
+      creation2,
+      creation5,
+      creation3,
+      accessoires,
+      creation1,
+      heroImage,
+      creation4,
+      atelierCover,
+    ],
+    photoAngles: [
+      'face',
+      'cote',
+      'dos',
+      'cote',
+      'autre',
+      'autre',
+      'autre',
+      'autre',
+      'autre',
+      'autre',
+      'autre',
+      'autre',
+    ],
     updatedAt: '2026-03-01T10:00:00.000Z',
   },
   {
@@ -311,6 +339,10 @@ const ANGLE_LABELS: Record<NonNullable<MockCreation['photoAngles']>[number], str
 /** Libellés d’angle alignés sur les photos (vide si non renseignés). */
 export function getCreationPhotoLabels(creation: MockCreation) {
   const images = getCreationImages(creation)
+  // Tour 360° : afficher les degrés plutôt que Face/Dos
+  if (images.length >= 8) {
+    return images.map((_, index) => `${Math.round((index / images.length) * 360) % 360}°`)
+  }
   if (!creation.photoAngles?.length) return images.map(() => '')
   return images.map((_, index) => {
     const angle = creation.photoAngles?.[index]

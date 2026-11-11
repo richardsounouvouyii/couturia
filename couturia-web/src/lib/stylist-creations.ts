@@ -275,6 +275,9 @@ export const STYLIST_DEMO = {
   atelierName: DEMO_ATELIER_NAME,
 }
 
+/** Nombre max de photos pour un tour 360° (démo locale). */
+export const MAX_CREATION_PHOTOS = 24
+
 /** Compresse une image téléphone pour la démo locale (localStorage). */
 export function readImageFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -289,7 +292,8 @@ export function readImageFileAsDataUrl(file: File): Promise<string> {
       const src = String(reader.result || '')
       const img = new Image()
       img.onload = () => {
-        const maxSide = 1100
+        // Plus compact pour permettre un vrai tour 360° (jusqu’à 24 photos)
+        const maxSide = 900
         const scale = Math.min(1, maxSide / Math.max(img.width, img.height))
         const width = Math.max(1, Math.round(img.width * scale))
         const height = Math.max(1, Math.round(img.height * scale))
@@ -302,7 +306,7 @@ export function readImageFileAsDataUrl(file: File): Promise<string> {
           return
         }
         ctx.drawImage(img, 0, 0, width, height)
-        resolve(canvas.toDataURL('image/jpeg', 0.72))
+        resolve(canvas.toDataURL('image/jpeg', 0.62))
       }
       img.onerror = () => reject(new Error('Image invalide'))
       img.src = src

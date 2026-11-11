@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, House, Images, MapPin, MessageCircle, Share2, Star } from 'lucide-react'
 import { CreationGalleryModal } from '@/components/CreationGalleryModal'
-import { CreationTurnViewer } from '@/components/CreationTurnViewer'
+import {
+  CreationTurnViewer,
+  TURN_360_MIN_FRAMES,
+} from '@/components/CreationTurnViewer'
 import { DocumentMeta } from '@/components/DocumentMeta'
 import { FavoriteButton } from '@/components/FavoriteButton'
 import { WhatsAppButton } from '@/components/WhatsAppButton'
@@ -100,7 +103,7 @@ export function CreationDetailPage() {
                 aria-label="Voir toute la galerie"
               >
                 <Images className="size-3.5 text-primary" aria-hidden />
-                Galerie
+                {images.length >= TURN_360_MIN_FRAMES ? 'Tour 360°' : 'Galerie'}
                 {images.length > 1 ? (
                   <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] text-white">
                     {images.length}

@@ -1,12 +1,25 @@
 import { useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Check, ImagePlus, Save, Trash2 } from 'lucide-react'
-import { CreationTurnViewer } from '@/components/CreationTurnViewer'
+import {
+  ArrowLeft,
+  Camera,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Images,
+  Save,
+  Trash2,
+} from 'lucide-react'
+import {
+  CreationTurnViewer,
+  TURN_360_MIN_FRAMES,
+} from '@/components/CreationTurnViewer'
 import { DocumentMeta } from '@/components/DocumentMeta'
 import { MOCK_CATEGORIES } from '@/lib/mock-data'
 import { useAuthSession } from '@/lib/auth-session'
 import {
   getStylistCreation,
+  MAX_CREATION_PHOTOS,
   PHOTO_ANGLES,
   photoAngleLabel,
   readImageFileAsDataUrl,
@@ -17,13 +30,13 @@ import {
 } from '@/lib/stylist-creations'
 
 const categoryOptions = MOCK_CATEGORIES.filter((c) => c.id !== 'tous').map((c) => c.label)
-const MAX_IMAGES = 8
-const SUGGESTED_ANGLES: PhotoAngle[] = ['face', 'dos', 'cote', 'detail']
+const SUGGESTED_ANGLES: PhotoAngle[] = ['face', 'cote', 'dos', 'cote', 'detail']
 
 const fieldClass =
   'h-11 w-full rounded-xl border border-line bg-page px-3 text-sm text-heading outline-none transition placeholder:text-muted focus:border-primary focus-visible:ring-2 focus-visible:ring-primary/30'
 
-function suggestedAngleForIndex(index: number): PhotoAngle {
+function suggestedAngleForIndex(index: number, totalHint: number): PhotoAngle {
+  if (totalHint >= TURN_360_MIN_FRAMES) return 'autre'
   return SUGGESTED_ANGLES[index] ?? 'autre'
 }
 
@@ -31,7 +44,8 @@ export function StylistCreationFormPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { user } = useAuthSession()
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const galleryInputRef = useRef<HTMLInputElement>(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
   const existing = id ? getStylistCreation(id) : undefined
   const isEdit = Boolean(existing)
 
@@ -55,9 +69,15 @@ export function StylistCreationFormPage() {
   const [uploading, setUploading] = useState(false)
 
   const images = useMemo(() => photos.map((photo) => photo.src), [photos])
+  const is360 = photos.length >= TURN_360_MIN_FRAMES
   const angleLabels = useMemo(
-    () => photos.map((photo) => photoAngleLabel(photo.angle)),
-    [photos],
+    () =>
+      photos.map((photo, index) =>
+        is360
+          ? `${Math.round((index / photos.length) * 360) % 360}°`
+          : photoAngleLabel(photo.angle),
+      ),
+    [is360, photos],
   )
 
   const title = useMemo(
@@ -70,21 +90,23 @@ export function StylistCreationFormPage() {
     event.target.value = ''
     if (files.length === 0) return
 
-    const remaining = MAX_IMAGES - photos.length
+    const remaining = MAX_CREATION_PHOTOS - photos.length
     if (remaining <= 0) {
-      setImageError(`Maximum ${MAX_IMAGES} photos par création.`)
+      setImageError(`Maximum ${MAX_CREATION_PHOTOS} photos par création.`)
       return
     }
 
     setUploading(true)
     setImageError(null)
     try {
+      const batch = files.slice(0, remaining)
+      const totalHint = photos.length + batch.length
       const next: StylistPhoto[] = []
-      for (const [offset, file] of files.slice(0, remaining).entries()) {
+      for (const [offset, file] of batch.entries()) {
         const src = await readImageFileAsDataUrl(file)
         next.push({
           src,
-          angle: suggestedAngleForIndex(photos.length + offset),
+          angle: suggestedAngleForIndex(photos.length + offset, totalHint),
         })
       }
       setPhotos((current) => {
@@ -94,7 +116,9 @@ export function StylistCreationFormPage() {
         return merged
       })
       if (files.length > remaining) {
-        setImageError(`Seules ${remaining} photo(s) ont été ajoutées (max ${MAX_IMAGES}).`)
+        setImageError(
+          `Seules ${remaining} photo(s) ont été ajoutées (max ${MAX_CREATION_PHOTOS}).`,
+        )
       }
     } catch {
       setImageError('Impossible de lire une des images. Réessayez.')
@@ -123,6 +147,18 @@ export function StylistCreationFormPage() {
       const [picked] = next.splice(index, 1)
       setActiveIndex(0)
       return [picked, ...next]
+    })
+  }
+
+  function movePhoto(index: number, direction: -1 | 1) {
+    setPhotos((current) => {
+      const target = index + direction
+      if (target < 0 || target >= current.length) return current
+      const next = [...current]
+      const [picked] = next.splice(index, 1)
+      next.splice(target, 0, picked)
+      setActiveIndex(target)
+      return next
     })
   }
 
@@ -198,8 +234,8 @@ export function StylistCreationFormPage() {
           {title}
         </h1>
         <p className="mt-1 text-sm text-muted">
-          Ajoutez autant de photos que vous voulez. Étiquetez Face / Dos / Côté si utile,
-          ou « Autre » pour le reste.
+          Pour un tour 360°, photographiez le vêtement en tournant autour, dans le même sens,
+          puis importez les photos dans l’ordre.
         </p>
 
         <form
@@ -297,34 +333,79 @@ export function StylistCreationFormPage() {
 
           <fieldset>
             <legend className="mb-2 text-sm font-medium text-heading">
-              Photos ({photos.length}/{MAX_IMAGES})
+              Photos ({photos.length}/{MAX_CREATION_PHOTOS})
+              {is360 ? (
+                <span className="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                  Tour 360° actif
+                </span>
+              ) : null}
             </legend>
 
+            <div className="mb-3 rounded-xl border border-line bg-page px-3 py-2.5 text-xs leading-relaxed text-muted">
+              <p className="font-medium text-heading">Astuce tour 360°</p>
+              <p className="mt-1">
+                Idéal : {TURN_360_MIN_FRAMES} à {MAX_CREATION_PHOTOS} photos, toujours dans le
+                même sens autour du mannequin. À partir de {TURN_360_MIN_FRAMES} photos, le
+                client peut faire tourner la pièce en glissant.
+              </p>
+            </div>
+
+            {/* Galerie : multi-sélection (sans capture → évite l’appareil photo seul) */}
             <input
-              ref={fileInputRef}
+              ref={galleryInputRef}
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp"
               multiple
               className="sr-only"
               onChange={onPickFiles}
             />
+            {/* Appareil photo : 1 cliché à la fois */}
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="sr-only"
+              onChange={onPickFiles}
+            />
 
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading || photos.length >= MAX_IMAGES}
-              className="flex w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-primary/35 bg-page px-4 py-7 text-center transition hover:border-primary hover:bg-primary/5 disabled:opacity-60"
-            >
-              <span className="grid size-12 place-items-center rounded-full bg-primary/10 text-primary">
-                <ImagePlus className="size-6" aria-hidden />
-              </span>
-              <span className="text-sm font-semibold text-heading">
-                {uploading ? 'Chargement…' : 'Ajouter depuis le téléphone'}
-              </span>
-              <span className="text-xs text-muted">
-                Face, dos, côté, détails… ou Autre pour le reste
-              </span>
-            </button>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => galleryInputRef.current?.click()}
+                disabled={uploading || photos.length >= MAX_CREATION_PHOTOS}
+                className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-primary/35 bg-page px-4 py-6 text-center transition hover:border-primary hover:bg-primary/5 disabled:opacity-60"
+              >
+                <span className="grid size-11 place-items-center rounded-full bg-primary/10 text-primary">
+                  <Images className="size-5" aria-hidden />
+                </span>
+                <span className="text-sm font-semibold text-heading">
+                  {uploading ? 'Chargement…' : 'Choisir plusieurs photos'}
+                </span>
+                <span className="text-[11px] leading-snug text-muted">
+                  Galerie · sélection multiple
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => cameraInputRef.current?.click()}
+                disabled={uploading || photos.length >= MAX_CREATION_PHOTOS}
+                className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-line bg-page px-4 py-6 text-center transition hover:border-primary/35 hover:bg-primary/5 disabled:opacity-60"
+              >
+                <span className="grid size-11 place-items-center rounded-full bg-ribbon text-primary">
+                  <Camera className="size-5" aria-hidden />
+                </span>
+                <span className="text-sm font-semibold text-heading">Prendre une photo</span>
+                <span className="text-[11px] leading-snug text-muted">
+                  Appareil photo · 1 à la fois
+                </span>
+              </button>
+            </div>
+            <p className="mt-2 text-[11px] text-muted">
+              Astuce téléphone : dans la galerie, appuyez longuement ou cochez plusieurs
+              images avant « OK / Ajouter ».
+            </p>
 
             {photos.length > 0 ? (
               <>
@@ -339,7 +420,9 @@ export function StylistCreationFormPage() {
                 </div>
 
                 <p className="mt-3 text-xs text-muted">
-                  Choisissez l’étiquette de chaque photo. Les extras restent en « Autre ».
+                  {is360
+                    ? 'Réordonnez avec ← → si besoin. L’ordre définit le sens de rotation.'
+                    : `Ajoutez encore ${TURN_360_MIN_FRAMES - photos.length} photo(s) pour activer le tour 360°, ou étiquetez Face / Dos.`}
                 </p>
                 <ul className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3">
                   {photos.map((photo, index) => {
@@ -371,7 +454,7 @@ export function StylistCreationFormPage() {
                           <button
                             type="button"
                             onClick={() => makeCover(index)}
-                            className="absolute bottom-10 left-1 rounded-full bg-white/95 px-1.5 py-0.5 text-[9px] font-semibold text-heading shadow-sm"
+                            className="absolute top-8 left-1 rounded-full bg-white/95 px-1.5 py-0.5 text-[9px] font-semibold text-heading shadow-sm"
                           >
                             Couverture
                           </button>
@@ -385,22 +468,50 @@ export function StylistCreationFormPage() {
                           <Trash2 className="size-3.5" />
                         </button>
 
-                        <label className="mt-1.5 block">
-                          <span className="sr-only">Angle de la photo {index + 1}</span>
-                          <select
-                            value={photo.angle}
-                            onChange={(e) =>
-                              setPhotoAngle(index, e.target.value as PhotoAngle)
-                            }
-                            className="h-9 w-full rounded-lg border border-line bg-page px-2 text-xs font-medium text-heading outline-none focus:border-primary"
+                        <div className="mt-1.5 flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => movePhoto(index, -1)}
+                            disabled={index === 0}
+                            className="grid size-8 place-items-center rounded-lg border border-line bg-page text-heading disabled:opacity-40"
+                            aria-label="Déplacer à gauche"
                           >
-                            {PHOTO_ANGLES.map((option) => (
-                              <option key={option.id} value={option.id}>
-                                {option.label}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
+                            <ChevronLeft className="size-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => movePhoto(index, 1)}
+                            disabled={index === photos.length - 1}
+                            className="grid size-8 place-items-center rounded-lg border border-line bg-page text-heading disabled:opacity-40"
+                            aria-label="Déplacer à droite"
+                          >
+                            <ChevronRight className="size-4" />
+                          </button>
+                          {is360 ? (
+                            <span className="ml-auto text-[10px] font-semibold text-muted">
+                              {Math.round((index / photos.length) * 360) % 360}°
+                            </span>
+                          ) : null}
+                        </div>
+
+                        {!is360 ? (
+                          <label className="mt-1.5 block">
+                            <span className="sr-only">Angle de la photo {index + 1}</span>
+                            <select
+                              value={photo.angle}
+                              onChange={(e) =>
+                                setPhotoAngle(index, e.target.value as PhotoAngle)
+                              }
+                              className="h-9 w-full rounded-lg border border-line bg-page px-2 text-xs font-medium text-heading outline-none focus:border-primary"
+                            >
+                              {PHOTO_ANGLES.map((option) => (
+                                <option key={option.id} value={option.id}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                        ) : null}
                       </li>
                     )
                   })}
