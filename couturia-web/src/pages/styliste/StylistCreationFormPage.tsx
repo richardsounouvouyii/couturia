@@ -120,7 +120,7 @@ export function StylistCreationFormPage() {
       categorie,
       ville: ville.trim(),
       atelier: atelierName,
-      prixIndicatif: prix.trim() ? Number(prix) : null,
+      prixIndicatif: Number(prix),
       description: description.trim(),
       images,
       published: true,
@@ -219,16 +219,17 @@ export function StylistCreationFormPage() {
 
             <label className="block w-full">
               <span className="mb-1.5 block text-sm font-medium text-heading">
-                Prix indicatif (FCFA)
+                Prix (FCFA)
               </span>
               <input
                 type="number"
                 inputMode="numeric"
-                min={0}
-                step="any"
+                required
+                min={1}
+                step="1"
                 value={prix}
                 onChange={(e) => setPrix(e.target.value)}
-                placeholder="Optionnel"
+                placeholder="Ex. 25000"
                 className={fieldClass}
               />
             </label>
@@ -238,7 +239,7 @@ export function StylistCreationFormPage() {
             <span className="mb-1.5 block text-sm font-medium text-heading">Description</span>
             <textarea
               required
-              minLength={10}
+              minLength={3}
               rows={4}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
