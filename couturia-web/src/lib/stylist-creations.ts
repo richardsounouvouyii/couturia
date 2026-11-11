@@ -4,6 +4,21 @@ const STORAGE_KEY = 'couturia.stylist.creations.v1'
 const DEMO_ATELIER_ID = 'a3'
 const DEMO_ATELIER_NAME = 'Couture Fatou'
 
+export const PHOTO_ANGLES = [
+  { id: 'face', label: 'Face' },
+  { id: 'dos', label: 'Dos' },
+  { id: 'cote', label: 'Côté' },
+  { id: 'detail', label: 'Détail' },
+  { id: 'autre', label: 'Autre' },
+] as const
+
+export type PhotoAngle = (typeof PHOTO_ANGLES)[number]['id']
+
+export type StylistPhoto = {
+  src: string
+  angle: PhotoAngle
+}
+
 export type StylistCreationDraft = {
   id: string
   titre: string
@@ -12,32 +27,55 @@ export type StylistCreationDraft = {
   atelier: string
   prixIndicatif: number | null
   description: string
-  /** Photos (angles) — la 1re sert de couverture. */
+  /** Photos avec angle optionnel — la 1re sert de couverture. */
+  photos: StylistPhoto[]
+  /** Miroir des src (compat visionneuse / catalogue). */
   images: string[]
+  /** WhatsApp du styliste (inscription). */
+  telephoneWhatsapp?: string
   published: boolean
   updatedAt: string
 }
 
-function normalizeImages(item: Partial<StylistCreationDraft> & { image?: string }) {
-  if (Array.isArray(item.images)) {
-    return item.images.filter((src): src is string => typeof src === 'string' && src.length > 0)
+function parseAngle(value: unknown): PhotoAngle {
+  const ids = PHOTO_ANGLES.map((item) => item.id)
+  return ids.includes(value as PhotoAngle) ? (value as PhotoAngle) : 'autre'
+}
+
+function normalizePhotos(
+  item: Partial<StylistCreationDraft> & { image?: string },
+): StylistPhoto[] {
+  if (Array.isArray(item.photos)) {
+    return item.photos
+      .map((photo) => {
+        if (!photo || typeof photo !== 'object') return null
+        const src = typeof photo.src === 'string' ? photo.src : ''
+        if (!src) return null
+        return { src, angle: parseAngle(photo.angle) }
+      })
+      .filter((photo): photo is StylistPhoto => photo != null)
   }
-  if (typeof item.image === 'string' && item.image.length > 0) {
-    return [item.image]
-  }
-  return []
+
+  const legacy = Array.isArray(item.images)
+    ? item.images.filter((src): src is string => typeof src === 'string' && src.length > 0)
+    : typeof item.image === 'string' && item.image.length > 0
+      ? [item.image]
+      : []
+
+  return legacy.map((src) => ({ src, angle: 'autre' as const }))
 }
 
 function normalize(
   item: Partial<StylistCreationDraft> & { image?: string },
 ): StylistCreationDraft | null {
-  const images = normalizeImages(item)
+  const photos = normalizePhotos(item)
+  const images = photos.map((photo) => photo.src)
   if (
     typeof item.id !== 'string' ||
     typeof item.titre !== 'string' ||
     typeof item.categorie !== 'string' ||
     typeof item.ville !== 'string' ||
-    images.length === 0
+    photos.length === 0
   ) {
     return null
   }
@@ -55,7 +93,12 @@ function normalize(
         ? item.prixIndicatif
         : null,
     description: typeof item.description === 'string' ? item.description : '',
+    photos,
     images,
+    telephoneWhatsapp:
+      typeof item.telephoneWhatsapp === 'string' && item.telephoneWhatsapp.trim()
+        ? item.telephoneWhatsapp.trim()
+        : undefined,
     published: Boolean(item.published),
     updatedAt:
       typeof item.updatedAt === 'string' ? item.updatedAt : new Date().toISOString(),
@@ -89,17 +132,21 @@ function seedFromMock(): StylistCreationDraft[] {
       atelier: c.atelier,
       prixIndicatif: c.prixIndicatif,
       description: `Création « ${c.titre} » proposée par ${c.atelier}.`,
+      photos: [{ src: c.image, angle: 'face' as const }],
       images: [c.image],
       published: true,
       updatedAt: new Date().toISOString(),
     }),
   )
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded))
+  persistStylistCreations(seeded)
   return seeded
 }
 
 function writeAll(items: StylistCreationDraft[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
+  const result = persistStylistCreations(items)
+  if (!result.ok) {
+    throw new Error(result.message)
+  }
 }
 
 export function listStylistCreations() {
@@ -112,35 +159,66 @@ export function getStylistCreation(id: string) {
 
 export function saveStylistCreation(
   input: Omit<StylistCreationDraft, 'id' | 'updatedAt'> & { id?: string },
-) {
-  const items = readAll()
-  const now = new Date().toISOString()
-  if (input.id) {
-    const next = items.map((item) =>
-      item.id === input.id ? { ...item, ...input, id: input.id, updatedAt: now } : item,
-    )
-    writeAll(next)
-    return next.find((item) => item.id === input.id)!
-  }
+): { ok: true; item: StylistCreationDraft } | { ok: false; message: string } {
+  try {
+    const items = readAll()
+    const now = new Date().toISOString()
+    if (input.id) {
+      const photos = input.photos?.length
+        ? input.photos
+        : (input.images ?? []).map((src) => ({ src, angle: 'autre' as const }))
+      const next = items.map((item) =>
+        item.id === input.id
+          ? {
+              ...item,
+              ...input,
+              id: input.id,
+              photos,
+              images: photos.map((photo) => photo.src),
+              updatedAt: now,
+            }
+          : item,
+      )
+      writeAll(next)
+      return { ok: true, item: next.find((item) => item.id === input.id)! }
+    }
 
-  const created: StylistCreationDraft = {
-    id: `sc-${Date.now()}`,
-    titre: input.titre,
-    categorie: input.categorie,
-    ville: input.ville,
-    atelier: input.atelier,
-    prixIndicatif: input.prixIndicatif,
-    description: input.description,
-    images: input.images,
-    published: input.published,
-    updatedAt: now,
+    const photos = input.photos?.length
+      ? input.photos
+      : (input.images ?? []).map((src) => ({ src, angle: 'autre' as const }))
+    const created: StylistCreationDraft = {
+      id: `sc-${Date.now()}`,
+      titre: input.titre,
+      categorie: input.categorie,
+      ville: input.ville,
+      atelier: input.atelier,
+      prixIndicatif: input.prixIndicatif,
+      description: input.description,
+      photos,
+      images: photos.map((photo) => photo.src),
+      telephoneWhatsapp: input.telephoneWhatsapp,
+      published: input.published,
+      updatedAt: now,
+    }
+    writeAll([created, ...items])
+    return { ok: true, item: created }
+  } catch (error) {
+    return {
+      ok: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : 'Impossible d’enregistrer. Réessayez.',
+    }
   }
-  writeAll([created, ...items])
-  return created
 }
 
 export function deleteStylistCreation(id: string) {
   writeAll(readAll().filter((item) => item.id !== id))
+}
+
+export function photoAngleLabel(angle: PhotoAngle) {
+  return PHOTO_ANGLES.find((item) => item.id === angle)?.label ?? 'Autre'
 }
 
 export function stylistDraftToMock(draft: StylistCreationDraft): MockCreation {
@@ -152,10 +230,44 @@ export function stylistDraftToMock(draft: StylistCreationDraft): MockCreation {
     categorie: draft.categorie,
     ville: draft.ville,
     prixIndicatif: draft.prixIndicatif,
-    note: 4.8,
-    avis: 12,
+    note: 0,
+    avis: 0,
     image: draft.images[0] ?? '',
+    images: draft.images,
+    photoAngles: draft.photos.map((photo) => photo.angle),
+    description: draft.description,
+    telephoneWhatsapp: draft.telephoneWhatsapp,
+    updatedAt: draft.updatedAt,
+    ratingsDemo: true,
   }
+}
+
+export function persistStylistCreations(items: StylistCreationDraft[]) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
+    return { ok: true as const }
+  } catch (error) {
+    const quota =
+      error instanceof DOMException &&
+      (error.name === 'QuotaExceededError' || error.name === 'NS_ERROR_DOM_QUOTA_REACHED')
+    return {
+      ok: false as const,
+      quota,
+      message: quota
+        ? 'Espace insuffisant sur cet appareil. Supprimez des photos ou des créations, puis réessayez.'
+        : 'Impossible d’enregistrer. Réessayez.',
+    }
+  }
+}
+
+export function resolveCreationById(id: string): MockCreation | undefined {
+  const draft = getStylistCreation(id)
+  if (draft?.id.startsWith('sc-')) {
+    return draft.published ? stylistDraftToMock(draft) : undefined
+  }
+  const fromMock = MOCK_CREATIONS.find((creation) => creation.id === id)
+  if (fromMock) return fromMock
+  return draft?.published ? stylistDraftToMock(draft) : undefined
 }
 
 export const STYLIST_DEMO = {

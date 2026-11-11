@@ -10,10 +10,16 @@ import { Maximize2, RotateCcw, X, ZoomIn, ZoomOut } from 'lucide-react'
 
 type CreationTurnViewerProps = {
   images: string[]
+  /** Libellés d’angle (Face, Dos…) alignés sur `images`. */
+  labels?: string[]
   alt: string
   className?: string
   activeIndex?: number
   onActiveIndexChange?: (index: number) => void
+  /** Mode galerie / lightbox : hauteur souple, image contenue. */
+  immersive?: boolean
+  /** Ratio hors mode immersif (défaut portrait produit). */
+  aspectClass?: string
 }
 
 /**
@@ -24,10 +30,13 @@ type CreationTurnViewerProps = {
  */
 export function CreationTurnViewer({
   images,
+  labels,
   alt,
   className = '',
   activeIndex,
   onActiveIndexChange,
+  immersive = false,
+  aspectClass = 'aspect-[3/4]',
 }: CreationTurnViewerProps) {
   const controlled = typeof activeIndex === 'number'
   const [internalIndex, setInternalIndex] = useState(0)
@@ -51,6 +60,7 @@ export function CreationTurnViewer({
   const rawIndex = controlled ? activeIndex : internalIndex
   const safeIndex = count > 0 ? ((rawIndex % count) + count) % count : 0
   const current = images[safeIndex] ?? ''
+  const currentLabel = labels?.[safeIndex]?.trim() || null
 
   const setIndex = useCallback(
     (next: number | ((currentValue: number) => number)) => {
@@ -206,11 +216,14 @@ export function CreationTurnViewer({
     )
   }
 
+  const tall = fullscreen || immersive
+
   const stage = (
     <div
       className={[
         'relative overflow-hidden rounded-2xl border border-line bg-[#1a0a10]',
         fullscreen ? 'h-full max-h-[min(82vh,760px)] w-full max-w-4xl border-0' : '',
+        immersive ? 'min-h-[56vh] border-white/10 sm:min-h-[68vh]' : '',
         className,
       ].join(' ')}
     >
@@ -218,7 +231,9 @@ export function CreationTurnViewer({
         ref={stageRef}
         className={[
           'relative touch-none select-none',
-          fullscreen ? 'flex h-full items-center justify-center' : 'aspect-[4/3]',
+          tall
+            ? 'flex h-full min-h-[56vh] items-center justify-center sm:min-h-[68vh]'
+            : aspectClass,
           zoom > 1 ? 'cursor-grab' : count > 1 ? 'cursor-ew-resize' : 'cursor-default',
           dragging && zoom > 1 ? 'cursor-grabbing' : '',
         ].join(' ')}
@@ -232,11 +247,17 @@ export function CreationTurnViewer({
       >
         <img
           src={current}
-          alt={`${alt} — angle ${safeIndex + 1}/${count}`}
+          alt={
+            currentLabel
+              ? `${alt} — ${currentLabel}`
+              : `${alt} — angle ${safeIndex + 1}/${count}`
+          }
           draggable={false}
           className={[
-            'mx-auto max-h-full max-w-full object-contain transition-transform duration-75 ease-out',
-            fullscreen ? 'h-full w-full' : 'size-full',
+            'mx-auto transition-transform duration-75 ease-out',
+            tall
+              ? 'max-h-full max-w-full object-contain'
+              : 'size-full object-cover',
           ].join(' ')}
           style={{
             transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`,
@@ -260,60 +281,62 @@ export function CreationTurnViewer({
         </div>
       ) : null}
 
-      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/35 to-transparent px-3 pt-8 pb-3">
+      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/35 to-transparent px-2.5 pt-6 pb-2.5 sm:px-3 sm:pt-8 sm:pb-3">
         <div className="flex items-center justify-between gap-2">
-          <div>
-            <p className="text-[11px] font-semibold text-white">
+          <div className="min-w-0">
+            <p className="truncate text-[10px] font-semibold text-white sm:text-[11px]">
               {count > 1
-                ? `Tourner · photo ${safeIndex + 1}/${count}`
-                : 'Ajoutez d’autres angles pour tourner'}
+                ? currentLabel
+                  ? `${currentLabel} · ${safeIndex + 1}/${count}`
+                  : `Tourner · ${safeIndex + 1}/${count}`
+                : currentLabel || 'Ajoutez d’autres angles'}
             </p>
-            <p className="text-[10px] text-white/75">
+            <p className="hidden text-[10px] text-white/75 sm:block">
               {zoom > 1
                 ? 'Déplacez pour explorer · pincez pour zoomer'
                 : 'Glissez ← → · molette / boutons pour zoomer'}
             </p>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
             <button
               type="button"
-              className="grid size-9 place-items-center rounded-full bg-white text-heading shadow-sm"
+              className="grid size-8 place-items-center rounded-full bg-white text-heading shadow-sm sm:size-9"
               onPointerDown={(e) => e.stopPropagation()}
               onClick={() => zoomBy(-0.25)}
               aria-label="Zoom arrière"
             >
-              <ZoomOut className="size-4" />
+              <ZoomOut className="size-3.5 sm:size-4" />
             </button>
-            <span className="min-w-10 text-center text-[11px] font-semibold text-white">
+            <span className="min-w-8 text-center text-[10px] font-semibold text-white sm:min-w-10 sm:text-[11px]">
               {Math.round(zoom * 100)}%
             </span>
             <button
               type="button"
-              className="grid size-9 place-items-center rounded-full bg-white text-heading shadow-sm"
+              className="grid size-8 place-items-center rounded-full bg-white text-heading shadow-sm sm:size-9"
               onPointerDown={(e) => e.stopPropagation()}
               onClick={() => zoomBy(0.25)}
               aria-label="Zoom avant"
             >
-              <ZoomIn className="size-4" />
+              <ZoomIn className="size-3.5 sm:size-4" />
             </button>
             <button
               type="button"
-              className="grid size-9 place-items-center rounded-full bg-white text-heading shadow-sm"
+              className="grid size-8 place-items-center rounded-full bg-white text-heading shadow-sm sm:size-9"
               onPointerDown={(e) => e.stopPropagation()}
               onClick={resetView}
               aria-label="Réinitialiser"
             >
-              <RotateCcw className="size-4" />
+              <RotateCcw className="size-3.5 sm:size-4" />
             </button>
             {!fullscreen ? (
               <button
                 type="button"
-                className="grid size-9 place-items-center rounded-full bg-white text-heading shadow-sm"
+                className="grid size-8 place-items-center rounded-full bg-white text-heading shadow-sm sm:size-9"
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={() => setFullscreen(true)}
                 aria-label="Plein écran"
               >
-                <Maximize2 className="size-4" />
+                <Maximize2 className="size-3.5 sm:size-4" />
               </button>
             ) : null}
           </div>
@@ -324,7 +347,7 @@ export function CreationTurnViewer({
         <>
           <button
             type="button"
-            className="absolute top-1/2 left-2 z-10 grid size-10 -translate-y-1/2 place-items-center rounded-full bg-white text-xl font-semibold text-heading shadow-md"
+            className="absolute top-1/2 left-2 z-10 grid size-10 -translate-y-1/2 place-items-center rounded-full bg-white text-xl font-semibold text-heading shadow-md sm:size-11"
             onPointerDown={(e) => e.stopPropagation()}
             onClick={() => setIndex((i) => i - 1)}
             aria-label="Angle précédent"
@@ -333,7 +356,7 @@ export function CreationTurnViewer({
           </button>
           <button
             type="button"
-            className="absolute top-1/2 right-2 z-10 grid size-10 -translate-y-1/2 place-items-center rounded-full bg-white text-xl font-semibold text-heading shadow-md"
+            className="absolute top-1/2 right-2 z-10 grid size-10 -translate-y-1/2 place-items-center rounded-full bg-white text-xl font-semibold text-heading shadow-md sm:size-11"
             onPointerDown={(e) => e.stopPropagation()}
             onClick={() => setIndex((i) => i + 1)}
             aria-label="Angle suivant"

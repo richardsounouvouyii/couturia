@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -8,15 +9,19 @@ import {
   Star,
 } from 'lucide-react'
 import { CreationCard } from '@/components/CreationCard'
+import { CreationGalleryModal } from '@/components/CreationGalleryModal'
 import { DocumentMeta } from '@/components/DocumentMeta'
 import { WhatsAppButton } from '@/components/WhatsAppButton'
-import { getAtelierById, getCreationsByAtelier } from '@/lib/mock-data'
+import { listPublicCreationsByAtelier } from '@/lib/catalogue'
+import { getAtelierById } from '@/lib/mock-data'
 import { absoluteUrl, atelierWhatsAppMessage } from '@/lib/whatsapp'
 
 export function AtelierDetailPage() {
   const { id } = useParams()
   const atelier = id ? getAtelierById(id) : undefined
-  const creations = id ? getCreationsByAtelier(id) : []
+  const creations = id ? listPublicCreationsByAtelier(id) : []
+  const [galleryOpen, setGalleryOpen] = useState(false)
+  const [galleryIndex, setGalleryIndex] = useState(0)
 
   if (!atelier) {
     return (
@@ -123,22 +128,31 @@ export function AtelierDetailPage() {
         </div>
 
         <section className="py-8 lg:py-10">
-          <h2 className="font-display text-2xl font-semibold text-primary">
-            Photos de l&apos;atelier
-          </h2>
+          <div className="flex items-end justify-between gap-3">
+            <h2 className="font-display text-2xl font-semibold text-primary">
+              Photos de l&apos;atelier
+            </h2>
+            <p className="text-xs text-muted sm:text-sm">Touchez pour agrandir</p>
+          </div>
           <div className="mt-4 grid grid-cols-3 gap-2 sm:gap-3">
             {atelier.gallery.map((image, index) => (
-              <div
+              <button
                 key={`${atelier.id}-gallery-${index}`}
-                className="aspect-[4/3] overflow-hidden rounded-xl bg-ribbon"
+                type="button"
+                onClick={() => {
+                  setGalleryIndex(index)
+                  setGalleryOpen(true)
+                }}
+                className="group aspect-[4/3] overflow-hidden rounded-xl bg-ribbon focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                aria-label={`Voir la photo ${index + 1} de ${atelier.nom}`}
               >
                 <img
                   src={image}
                   alt={`Photo ${index + 1} de ${atelier.nom}`}
-                  className="size-full object-cover"
+                  className="size-full object-cover transition duration-300 group-hover:scale-[1.03]"
                   loading="lazy"
                 />
-              </div>
+              </button>
             ))}
           </div>
         </section>
@@ -166,6 +180,15 @@ export function AtelierDetailPage() {
           )}
         </section>
       </div>
+
+      <CreationGalleryModal
+        open={galleryOpen}
+        onClose={() => setGalleryOpen(false)}
+        images={atelier.gallery}
+        title={`Photos — ${atelier.nom}`}
+        initialIndex={galleryIndex}
+        onIndexChange={setGalleryIndex}
+      />
     </div>
   )
 }

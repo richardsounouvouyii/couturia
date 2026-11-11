@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
-import { Download, Heart, LayoutGrid, LogOut, Menu, Search, X } from 'lucide-react'
+import { Download, Heart, LogOut, Menu, Search, X } from 'lucide-react'
 import logo from '@/assets/images/logo.png'
 import { SearchOverlay } from '@/components/SearchOverlay'
 import { useAuthSession } from '@/lib/auth-session'
@@ -87,15 +87,14 @@ export function Navbar() {
             <NavLink to="/ateliers" className={navLinkClass}>
               Stylistes
             </NavLink>
+            <NavLink to="/favoris" className={navLinkClass}>
+              Favoris
+            </NavLink>
             {isStylist ? (
               <NavLink to="/espace-styliste" className={navLinkClass}>
                 Ma vitrine
               </NavLink>
-            ) : (
-              <NavLink to="/favoris" className={navLinkClass}>
-                Favoris
-              </NavLink>
-            )}
+            ) : null}
             <a href="/#a-propos" className={navLinkClass({ isActive: false })}>
               À propos
             </a>
@@ -114,28 +113,18 @@ export function Navbar() {
               <Search className="size-5" />
             </button>
 
-            {isStylist ? (
-              <Link
-                to="/espace-styliste"
-                className="btn btn-ghost btn-square text-heading"
-                aria-label="Gérer ma vitrine"
-              >
-                <LayoutGrid className="size-5" />
-              </Link>
-            ) : (
-              <Link
-                to="/favoris"
-                className="btn btn-ghost btn-square relative text-heading"
-                aria-label="Favoris"
-              >
-                <Heart className="size-5" />
-                {count > 0 ? (
-                  <span className="absolute top-1 right-1 grid min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] font-semibold text-white">
-                    {count}
-                  </span>
-                ) : null}
-              </Link>
-            )}
+            <Link
+              to="/favoris"
+              className="btn btn-ghost btn-square relative text-heading"
+              aria-label="Favoris"
+            >
+              <Heart className="size-5" />
+              {count > 0 ? (
+                <span className="absolute top-1 right-1 grid min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] font-semibold text-white">
+                  {count}
+                </span>
+              ) : null}
+            </Link>
 
             {isAuthenticated ? (
               <>
@@ -206,6 +195,13 @@ export function Navbar() {
               >
                 Stylistes
               </NavLink>
+              <NavLink
+                to="/favoris"
+                className={mobileLinkClass}
+                onClick={() => setMenuOpen(false)}
+              >
+                Favoris {count > 0 ? `(${count})` : ''}
+              </NavLink>
               {isStylist ? (
                 <NavLink
                   to="/espace-styliste"
@@ -214,15 +210,7 @@ export function Navbar() {
                 >
                   Ma vitrine
                 </NavLink>
-              ) : (
-                <NavLink
-                  to="/favoris"
-                  className={mobileLinkClass}
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Favoris {count > 0 ? `(${count})` : ''}
-                </NavLink>
-              )}
+              ) : null}
               <a
                 href="/#a-propos"
                 className={mobileLinkClass({ isActive: false })}

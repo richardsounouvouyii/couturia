@@ -16,17 +16,17 @@ type Props = {
 
 export function CreationCard({ creation }: Props) {
   const atelier = getAtelierById(creation.atelierId)
-  const canWhatsApp = atelier ? isWhatsAppAvailable(atelier.telephoneWhatsapp) : false
-  const whatsappUrl =
-    atelier && canWhatsApp
-      ? buildWhatsAppUrl(
-          atelier.telephoneWhatsapp,
-          creationWhatsAppMessage(
-            creation.titre,
-            absoluteUrl(`/catalogue/${creation.id}`),
-          ),
-        )
-      : null
+  const phone = creation.telephoneWhatsapp || atelier?.telephoneWhatsapp || ''
+  const canWhatsApp = isWhatsAppAvailable(phone)
+  const whatsappUrl = canWhatsApp
+    ? buildWhatsAppUrl(
+        phone,
+        creationWhatsAppMessage(
+          creation.titre,
+          absoluteUrl(`/catalogue/${creation.id}`),
+        ),
+      )
+    : null
 
   return (
     <article className="group flex min-w-0 flex-col gap-2.5">
@@ -69,10 +69,16 @@ export function CreationCard({ creation }: Props) {
           {creation.atelier}
         </p>
         <div className="flex items-center justify-between gap-2 pt-0.5 text-xs sm:text-sm">
-          <span className="inline-flex items-center gap-1 text-heading/80">
-            <Star className="size-3.5 fill-gold text-gold" aria-hidden />
-            {creation.note.toFixed(1).replace('.', ',')} ({creation.avis})
-          </span>
+          {creation.ratingsDemo ? (
+            <span className="rounded-full bg-ribbon px-2 py-0.5 text-[10px] font-semibold text-primary">
+              Nouveau · démo
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 text-heading/80">
+              <Star className="size-3.5 fill-gold text-gold" aria-hidden />
+              {creation.note.toFixed(1).replace('.', ',')} ({creation.avis})
+            </span>
+          )}
           {creation.prixIndicatif != null && (
             <span className="shrink-0 font-semibold text-primary">
               {formatFcfa(creation.prixIndicatif)}

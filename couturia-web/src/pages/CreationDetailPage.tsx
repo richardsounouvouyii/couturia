@@ -1,17 +1,31 @@
+import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, House, MapPin, MessageCircle, Share2, Star } from 'lucide-react'
+import { ArrowLeft, House, Images, MapPin, MessageCircle, Share2, Star } from 'lucide-react'
+import { CreationGalleryModal } from '@/components/CreationGalleryModal'
+import { CreationTurnViewer } from '@/components/CreationTurnViewer'
 import { DocumentMeta } from '@/components/DocumentMeta'
 import { FavoriteButton } from '@/components/FavoriteButton'
 import { WhatsAppButton } from '@/components/WhatsAppButton'
 import { formatFcfa } from '@/lib/format'
-import { getAtelierById, MOCK_CREATIONS } from '@/lib/mock-data'
+import { resolvePublicCreationById } from '@/lib/catalogue'
+import { getAtelierById, getCreationImages, getCreationPhotoLabels } from '@/lib/mock-data'
 import { facebookShareUrl, nativeShare, whatsappShareUrl } from '@/lib/share'
 import { absoluteUrl, creationWhatsAppMessage } from '@/lib/whatsapp'
 
 export function CreationDetailPage() {
   const { id } = useParams()
-  const creation = MOCK_CREATIONS.find((item) => item.id === id)
+  const creation = id ? resolvePublicCreationById(id) : undefined
   const atelier = creation ? getAtelierById(creation.atelierId) : undefined
+  const images = creation ? getCreationImages(creation) : []
+  const photoLabels = creation ? getCreationPhotoLabels(creation) : []
+  const contactPhone = creation?.telephoneWhatsapp || atelier?.telephoneWhatsapp
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [galleryOpen, setGalleryOpen] = useState(false)
+
+  useEffect(() => {
+    setActiveIndex(0)
+    setGalleryOpen(false)
+  }, [creation?.id])
 
   if (!creation) {
     return (
@@ -54,78 +68,143 @@ export function CreationDetailPage() {
         path={`/catalogue/${creation.id}`}
       />
 
-      <div className="mx-auto max-w-7xl px-4 py-6 lg:px-8 lg:py-10">
+      <div className="mx-auto max-w-7xl px-4 py-4 sm:py-6 lg:px-8 lg:py-10">
         <Link
           to="/catalogue"
-          className="btn btn-ghost btn-sm mb-6 gap-2 px-0 text-primary hover:bg-transparent"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-primary"
         >
           <ArrowLeft className="size-4" />
           Retour aux créations
         </Link>
 
-        <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
-          <div className="relative overflow-hidden rounded-2xl bg-ribbon shadow-sm ring-1 ring-line">
-            <img
-              src={creation.image}
+        <div className="mt-4 grid gap-6 lg:grid-cols-2 lg:gap-12">
+          <div className="relative">
+            <CreationTurnViewer
+              images={images}
+              labels={photoLabels}
               alt={creation.titre}
-              className="aspect-[3/4] w-full object-cover"
+              activeIndex={activeIndex}
+              onActiveIndexChange={setActiveIndex}
             />
             <FavoriteButton
               creationId={creation.id}
               size="md"
-              className="absolute top-4 right-4"
+              className="absolute top-3 right-3 z-20"
             />
+
+            {images.length > 0 ? (
+              <button
+                type="button"
+                onClick={() => setGalleryOpen(true)}
+                className="absolute top-3 left-3 z-20 inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1.5 text-[11px] font-semibold text-heading shadow-sm sm:left-auto sm:right-14 sm:gap-1.5 sm:px-3 sm:py-2 sm:text-xs"
+                aria-label="Voir toute la galerie"
+              >
+                <Images className="size-3.5 text-primary" aria-hidden />
+                Galerie
+                {images.length > 1 ? (
+                  <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] text-white">
+                    {images.length}
+                  </span>
+                ) : null}
+              </button>
+            ) : null}
+
+            {images.length > 1 ? (
+              <ul className="mt-3 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {images.map((src, index) => {
+                  const active = index === activeIndex
+                  const label = photoLabels[index]?.trim()
+                  return (
+                    <li key={`${index}-${src.slice(0, 32)}`} className="relative shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setActiveIndex(index)}
+                        aria-label={label ? `Voir ${label}` : `Voir l’angle ${index + 1}`}
+                        aria-current={active ? 'true' : undefined}
+                        className={[
+                          'block overflow-hidden rounded-xl border-2 transition',
+                          active
+                            ? 'border-primary ring-2 ring-primary/20'
+                            : 'border-line opacity-90 hover:opacity-100',
+                        ].join(' ')}
+                      >
+                        <img
+                          src={src}
+                          alt=""
+                          className="size-[4.5rem] object-cover sm:size-24"
+                          loading="lazy"
+                        />
+                      </button>
+                      {label ? (
+                        <span className="pointer-events-none absolute inset-x-1 bottom-1 truncate rounded bg-black/60 px-1 py-0.5 text-center text-[9px] font-semibold text-white">
+                          {label}
+                        </span>
+                      ) : null}
+                    </li>
+                  )
+                })}
+              </ul>
+            ) : null}
           </div>
 
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold sm:text-xs sm:tracking-[0.18em]">
               {creation.categorie}
             </p>
-            <h1 className="font-display mt-2 text-3xl font-semibold text-primary sm:text-4xl">
+            <h1 className="font-display mt-1.5 text-2xl font-semibold leading-tight text-primary sm:mt-2 sm:text-4xl">
               {creation.titre}
             </h1>
 
-            <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-muted">
+            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted sm:mt-4 sm:gap-4 sm:text-sm">
               <span className="inline-flex items-center gap-1.5">
-                <House className="size-4 text-primary" aria-hidden />
+                <House className="size-3.5 text-primary sm:size-4" aria-hidden />
                 {creation.atelier}
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <MapPin className="size-4 text-primary" aria-hidden />
+                <MapPin className="size-3.5 text-primary sm:size-4" aria-hidden />
                 {creation.ville}
               </span>
-              <span className="inline-flex items-center gap-1.5 text-heading">
-                <Star className="size-4 fill-gold text-gold" aria-hidden />
-                {creation.note.toFixed(1).replace('.', ',')} ({creation.avis} avis)
-              </span>
+              {creation.ratingsDemo ? (
+                <span className="rounded-full bg-ribbon px-2 py-0.5 text-[10px] font-semibold text-primary">
+                  Nouvelle publication · démo
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 text-heading">
+                  <Star className="size-3.5 fill-gold text-gold sm:size-4" aria-hidden />
+                  {creation.note.toFixed(1).replace('.', ',')} ({creation.avis} avis)
+                </span>
+              )}
             </div>
 
             {creation.prixIndicatif != null && (
-              <p className="mt-6 font-display text-2xl font-semibold text-primary">
+              <p className="mt-4 font-display text-xl font-semibold text-primary sm:mt-6 sm:text-2xl">
                 {formatFcfa(creation.prixIndicatif)}
-                <span className="ml-2 text-sm font-sans font-normal text-muted">
+                <span className="ml-2 text-xs font-sans font-normal text-muted sm:text-sm">
                   prix indicatif
                 </span>
               </p>
             )}
 
-            <p className="mt-6 text-sm leading-relaxed text-muted sm:text-base">
-              Pièce présentée par {creation.atelier}. Contactez l&apos;atelier sur WhatsApp
-              pour discuter de vos mesures, du délai et du prix. Aucun compte requis.
+            <p className="mt-4 text-[13px] leading-relaxed text-muted sm:mt-6 sm:text-base">
+              {creation.description?.trim()
+                ? creation.description
+                : `Pièce présentée par ${creation.atelier}. Contactez l'atelier sur WhatsApp pour discuter de vos mesures, du délai et du prix. Aucun compte requis.`}
             </p>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start">
-              <WhatsAppButton phone={atelier?.telephoneWhatsapp} message={message} />
+            <div className="mt-5 flex flex-col gap-2.5 sm:mt-8 sm:flex-row sm:flex-wrap sm:items-start sm:gap-3">
+              <WhatsAppButton phone={contactPhone} message={message} />
               <Link
                 to={`/ateliers/${creation.atelierId}`}
-                className="btn rounded-xl border-2 border-gold bg-transparent text-heading hover:bg-gold/10"
+                className="btn h-10 min-h-10 rounded-xl border-2 border-gold bg-transparent text-sm text-heading hover:bg-gold/10 sm:h-12 sm:min-h-12"
               >
                 Voir l&apos;atelier
               </Link>
             </div>
 
-            <div className="mt-6 rounded-2xl border border-line bg-white p-4">
-              <p className="text-sm font-semibold text-heading">Partager cette création</p>
+            <div className="mt-5 rounded-2xl border border-line bg-white p-3.5 sm:mt-6 sm:p-4">
+              <p className="text-xs font-semibold text-heading sm:text-sm">
+                Partager cette création
+              </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <a
                   href={whatsappShareUrl(pageUrl, creation.titre)}
@@ -158,6 +237,16 @@ export function CreationDetailPage() {
           </div>
         </div>
       </div>
+
+      <CreationGalleryModal
+        open={galleryOpen}
+        onClose={() => setGalleryOpen(false)}
+        images={images}
+        labels={photoLabels}
+        title={creation.titre}
+        initialIndex={activeIndex}
+        onIndexChange={setActiveIndex}
+      />
     </div>
   )
 }

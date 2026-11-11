@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Eye, EyeOff, LogIn } from 'lucide-react'
 import { AuthRoleToggle } from '@/components/AuthRoleToggle'
+import { DemoAuthBanner } from '@/components/DemoAuthBanner'
 import { DocumentMeta } from '@/components/DocumentMeta'
 import logo from '@/assets/images/logo.png'
 import { parseAuthRole, type AuthRole } from '@/lib/auth-role'
@@ -41,7 +42,7 @@ export function LoginPage() {
         description={
           isStylist
             ? 'Connectez-vous pour gérer votre vitrine Couturia.'
-            : 'Connectez-vous pour retrouver vos favoris et suivre les stylistes.'
+            : 'Connectez-vous pour parcourir les créations. Les favoris restent sur cet appareil.'
         }
         path={`/connexion${isStylist ? '?role=styliste' : ''}`}
         noIndex
@@ -56,11 +57,15 @@ export function LoginPage() {
           <p className="mt-1.5 text-sm text-muted">
             {isStylist
               ? 'Gérez votre vitrine et vos créations.'
-              : 'Retrouvez les œuvres des stylistes et vos favoris.'}
+              : 'Parcourez les œuvres des stylistes. Favoris enregistrés sur cet appareil.'}
           </p>
         </div>
 
         <AuthRoleToggle value={role} onChange={setRole} />
+
+        <div className="mt-3">
+          <DemoAuthBanner />
+        </div>
 
         <form
           onSubmit={onSubmit}
@@ -107,11 +112,6 @@ export function LoginPage() {
             </div>
           </label>
 
-          <div className="mt-3 text-right">
-            <button type="button" className="text-sm text-primary hover:underline">
-              Mot de passe oublié ?
-            </button>
-          </div>
 
           <button type="submit" className="btn btn-primary mt-5 w-full gap-2 rounded-xl">
             <LogIn className="size-4" />

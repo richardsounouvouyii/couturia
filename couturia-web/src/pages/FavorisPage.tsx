@@ -2,12 +2,15 @@ import { Link } from 'react-router-dom'
 import { Heart } from 'lucide-react'
 import { CreationCard } from '@/components/CreationCard'
 import { DocumentMeta } from '@/components/DocumentMeta'
+import { resolvePublicCreationById } from '@/lib/catalogue'
 import { useFavorites } from '@/lib/favorites'
-import { MOCK_CREATIONS } from '@/lib/mock-data'
+import type { MockCreation } from '@/lib/mock-data'
 
 export function FavorisPage() {
   const { ids } = useFavorites()
-  const favorites = MOCK_CREATIONS.filter((creation) => ids.includes(creation.id))
+  const favorites = ids
+    .map((id) => resolvePublicCreationById(id))
+    .filter((item): item is MockCreation => item != null)
 
   return (
     <div className="bg-page">

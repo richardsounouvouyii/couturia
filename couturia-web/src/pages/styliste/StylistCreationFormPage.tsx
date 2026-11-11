@@ -7,16 +7,25 @@ import { MOCK_CATEGORIES } from '@/lib/mock-data'
 import { useAuthSession } from '@/lib/auth-session'
 import {
   getStylistCreation,
+  PHOTO_ANGLES,
+  photoAngleLabel,
   readImageFileAsDataUrl,
   saveStylistCreation,
   STYLIST_DEMO,
+  type PhotoAngle,
+  type StylistPhoto,
 } from '@/lib/stylist-creations'
 
 const categoryOptions = MOCK_CATEGORIES.filter((c) => c.id !== 'tous').map((c) => c.label)
 const MAX_IMAGES = 8
+const SUGGESTED_ANGLES: PhotoAngle[] = ['face', 'dos', 'cote', 'detail']
 
 const fieldClass =
   'h-11 w-full rounded-xl border border-line bg-page px-3 text-sm text-heading outline-none transition placeholder:text-muted focus:border-primary focus-visible:ring-2 focus-visible:ring-primary/30'
+
+function suggestedAngleForIndex(index: number): PhotoAngle {
+  return SUGGESTED_ANGLES[index] ?? 'autre'
+}
 
 export function StylistCreationFormPage() {
   const { id } = useParams()
@@ -39,11 +48,17 @@ export function StylistCreationFormPage() {
     existing?.prixIndicatif != null ? String(existing.prixIndicatif) : '',
   )
   const [description, setDescription] = useState(existing?.description ?? '')
-  const [images, setImages] = useState<string[]>(existing?.images ?? [])
+  const [photos, setPhotos] = useState<StylistPhoto[]>(existing?.photos ?? [])
   const [activeIndex, setActiveIndex] = useState(0)
   const [message, setMessage] = useState<string | null>(null)
   const [imageError, setImageError] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
+
+  const images = useMemo(() => photos.map((photo) => photo.src), [photos])
+  const angleLabels = useMemo(
+    () => photos.map((photo) => photoAngleLabel(photo.angle)),
+    [photos],
+  )
 
   const title = useMemo(
     () => (isEdit ? 'Modifier la création' : 'Nouvelle création'),
@@ -55,7 +70,7 @@ export function StylistCreationFormPage() {
     event.target.value = ''
     if (files.length === 0) return
 
-    const remaining = MAX_IMAGES - images.length
+    const remaining = MAX_IMAGES - photos.length
     if (remaining <= 0) {
       setImageError(`Maximum ${MAX_IMAGES} photos par création.`)
       return
@@ -64,11 +79,15 @@ export function StylistCreationFormPage() {
     setUploading(true)
     setImageError(null)
     try {
-      const next: string[] = []
-      for (const file of files.slice(0, remaining)) {
-        next.push(await readImageFileAsDataUrl(file))
+      const next: StylistPhoto[] = []
+      for (const [offset, file] of files.slice(0, remaining).entries()) {
+        const src = await readImageFileAsDataUrl(file)
+        next.push({
+          src,
+          angle: suggestedAngleForIndex(photos.length + offset),
+        })
       }
-      setImages((current) => {
+      setPhotos((current) => {
         const start = current.length
         const merged = [...current, ...next]
         setActiveIndex(start)
@@ -85,7 +104,7 @@ export function StylistCreationFormPage() {
   }
 
   function removeImage(index: number) {
-    setImages((current) => {
+    setPhotos((current) => {
       const next = current.filter((_, i) => i !== index)
       setActiveIndex((prev) => {
         if (next.length === 0) return 0
@@ -98,7 +117,7 @@ export function StylistCreationFormPage() {
   }
 
   function makeCover(index: number) {
-    setImages((current) => {
+    setPhotos((current) => {
       if (index <= 0 || index >= current.length) return current
       const next = [...current]
       const [picked] = next.splice(index, 1)
@@ -107,24 +126,42 @@ export function StylistCreationFormPage() {
     })
   }
 
+  function setPhotoAngle(index: number, angle: PhotoAngle) {
+    setPhotos((current) =>
+      current.map((photo, i) => (i === index ? { ...photo, angle } : photo)),
+    )
+  }
+
   function onSubmit(event: FormEvent) {
     event.preventDefault()
-    if (images.length === 0) {
+    if (photos.length === 0) {
       setImageError('Ajoutez au moins une photo depuis votre téléphone.')
       return
     }
 
-    saveStylistCreation({
+    const prixNumber = Number(prix.replace(/\D/g, ''))
+    if (!Number.isFinite(prixNumber) || prixNumber < 1) {
+      setImageError('Indiquez un prix valide en chiffres uniquement.')
+      return
+    }
+
+    const saved = saveStylistCreation({
       id: existing?.id,
       titre: titre.trim(),
       categorie,
       ville: ville.trim(),
       atelier: atelierName,
-      prixIndicatif: Number(prix),
+      prixIndicatif: prixNumber,
       description: description.trim(),
-      images,
+      photos,
+      images: photos.map((photo) => photo.src),
+      telephoneWhatsapp: user?.phone?.trim() || existing?.telephoneWhatsapp,
       published: true,
     })
+    if (!saved.ok) {
+      setImageError(saved.message)
+      return
+    }
     setMessage('Enregistré sur cet appareil (démo front).')
     window.setTimeout(() => {
       navigate('/espace-styliste/creations')
@@ -161,7 +198,8 @@ export function StylistCreationFormPage() {
           {title}
         </h1>
         <p className="mt-1 text-sm text-muted">
-          Ajoutez plusieurs angles pour que le client puisse tourner et zoomer.
+          Ajoutez autant de photos que vous voulez. Étiquetez Face / Dos / Côté si utile,
+          ou « Autre » pour le reste.
         </p>
 
         <form
@@ -222,15 +260,24 @@ export function StylistCreationFormPage() {
                 Prix (FCFA)
               </span>
               <input
-                type="number"
+                type="text"
                 inputMode="numeric"
+                pattern="[0-9]*"
                 required
-                min={1}
-                step="1"
+                minLength={1}
                 value={prix}
-                onChange={(e) => setPrix(e.target.value)}
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, '')
+                  setPrix(digits)
+                }}
+                onKeyDown={(e) => {
+                  if (['e', 'E', '+', '-', '.', ','].includes(e.key)) {
+                    e.preventDefault()
+                  }
+                }}
                 placeholder="Ex. 25000"
                 className={fieldClass}
+                autoComplete="off"
               />
             </label>
           </div>
@@ -250,7 +297,7 @@ export function StylistCreationFormPage() {
 
           <fieldset>
             <legend className="mb-2 text-sm font-medium text-heading">
-              Photos ({images.length}/{MAX_IMAGES})
+              Photos ({photos.length}/{MAX_IMAGES})
             </legend>
 
             <input
@@ -265,7 +312,7 @@ export function StylistCreationFormPage() {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              disabled={uploading || images.length >= MAX_IMAGES}
+              disabled={uploading || photos.length >= MAX_IMAGES}
               className="flex w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-primary/35 bg-page px-4 py-7 text-center transition hover:border-primary hover:bg-primary/5 disabled:opacity-60"
             >
               <span className="grid size-12 place-items-center rounded-full bg-primary/10 text-primary">
@@ -275,15 +322,16 @@ export function StylistCreationFormPage() {
                 {uploading ? 'Chargement…' : 'Ajouter depuis le téléphone'}
               </span>
               <span className="text-xs text-muted">
-                Plusieurs photos · face, profil, détails…
+                Face, dos, côté, détails… ou Autre pour le reste
               </span>
             </button>
 
-            {images.length > 0 ? (
+            {photos.length > 0 ? (
               <>
                 <div className="mt-3">
                   <CreationTurnViewer
                     images={images}
+                    labels={angleLabels}
                     alt={titre || 'Création'}
                     activeIndex={activeIndex}
                     onActiveIndexChange={setActiveIndex}
@@ -291,14 +339,14 @@ export function StylistCreationFormPage() {
                 </div>
 
                 <p className="mt-3 text-xs text-muted">
-                  Touchez une miniature pour l’afficher. « Couverture » = photo principale.
+                  Choisissez l’étiquette de chaque photo. Les extras restent en « Autre ».
                 </p>
-                <ul className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4">
-                  {images.map((src, index) => {
+                <ul className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {photos.map((photo, index) => {
                     const isActive = index === activeIndex
                     const isCover = index === 0
                     return (
-                      <li key={`${index}-${src.slice(0, 24)}`} className="relative">
+                      <li key={`${index}-${photo.src.slice(0, 24)}`} className="relative">
                         <button
                           type="button"
                           onClick={() => setActiveIndex(index)}
@@ -309,7 +357,11 @@ export function StylistCreationFormPage() {
                           aria-label={`Voir la photo ${index + 1}`}
                           aria-current={isActive ? 'true' : undefined}
                         >
-                          <img src={src} alt="" className="aspect-square w-full object-cover" />
+                          <img
+                            src={photo.src}
+                            alt=""
+                            className="aspect-square w-full object-cover"
+                          />
                         </button>
                         {isCover ? (
                           <span className="absolute top-1 left-1 rounded-full bg-primary px-1.5 py-0.5 text-[9px] font-semibold text-white">
@@ -319,7 +371,7 @@ export function StylistCreationFormPage() {
                           <button
                             type="button"
                             onClick={() => makeCover(index)}
-                            className="absolute bottom-1 left-1 rounded-full bg-white/95 px-1.5 py-0.5 text-[9px] font-semibold text-heading shadow-sm"
+                            className="absolute bottom-10 left-1 rounded-full bg-white/95 px-1.5 py-0.5 text-[9px] font-semibold text-heading shadow-sm"
                           >
                             Couverture
                           </button>
@@ -332,6 +384,23 @@ export function StylistCreationFormPage() {
                         >
                           <Trash2 className="size-3.5" />
                         </button>
+
+                        <label className="mt-1.5 block">
+                          <span className="sr-only">Angle de la photo {index + 1}</span>
+                          <select
+                            value={photo.angle}
+                            onChange={(e) =>
+                              setPhotoAngle(index, e.target.value as PhotoAngle)
+                            }
+                            className="h-9 w-full rounded-lg border border-line bg-page px-2 text-xs font-medium text-heading outline-none focus:border-primary"
+                          >
+                            {PHOTO_ANGLES.map((option) => (
+                              <option key={option.id} value={option.id}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
                       </li>
                     )
                   })}

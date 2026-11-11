@@ -12,7 +12,8 @@ import {
 } from 'lucide-react'
 import { CreationCard } from '@/components/CreationCard'
 import { DocumentMeta } from '@/components/DocumentMeta'
-import { CREATION_VILLES, MOCK_CATEGORIES, MOCK_CREATIONS } from '@/lib/mock-data'
+import { listPublicCreations } from '@/lib/catalogue'
+import { MOCK_CATEGORIES } from '@/lib/mock-data'
 
 const iconMap = {
   Sparkles,
@@ -43,8 +44,14 @@ export function CreationsPage() {
     (searchParams.get('tri') as SortKey) || 'recent',
   )
 
+  const villes = useMemo(() => {
+    return Array.from(new Set(listPublicCreations().map((item) => item.ville))).sort(
+      (a, b) => a.localeCompare(b, 'fr'),
+    )
+  }, [])
+
   const filtered = useMemo(() => {
-    let items = [...MOCK_CREATIONS]
+    let items = listPublicCreations()
 
     if (category !== 'tous') {
       items = items.filter((item) => item.categorie.toLowerCase() === category)
@@ -73,8 +80,12 @@ export function CreationsPage() {
           return (b.prixIndicatif ?? 0) - (a.prixIndicatif ?? 0)
         case 'note':
           return b.note - a.note
-        default:
-          return 0
+        case 'recent':
+        default: {
+          const aTime = Date.parse(a.updatedAt ?? '') || 0
+          const bTime = Date.parse(b.updatedAt ?? '') || 0
+          return bTime - aTime
+        }
       }
     })
 
@@ -197,7 +208,7 @@ export function CreationsPage() {
 
             <div className="mt-2.5 flex items-center gap-2">
               <div className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {['Toutes', ...CREATION_VILLES].map((v) => {
+                {['Toutes', ...villes].map((v) => {
                   const active = ville === v
                   return (
                     <button

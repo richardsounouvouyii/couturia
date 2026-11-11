@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Eye, EyeOff, Scissors, UserRound } from 'lucide-react'
 import { AuthRoleToggle } from '@/components/AuthRoleToggle'
+import { DemoAuthBanner } from '@/components/DemoAuthBanner'
 import { DocumentMeta } from '@/components/DocumentMeta'
 import logo from '@/assets/images/logo.png'
 import { parseAuthRole, type AuthRole } from '@/lib/auth-role'
@@ -45,7 +46,7 @@ export function RegisterPage() {
         description={
           isStylist
             ? 'Créez votre vitrine Couturia et recevez vos clients sur WhatsApp.'
-            : 'Inscrivez-vous pour parcourir les créations et enregistrer vos favoris.'
+            : 'Inscrivez-vous pour parcourir les créations. Les favoris restent sur cet appareil.'
         }
         path={`/inscription${isStylist ? '?role=styliste' : ''}`}
         noIndex
@@ -60,11 +61,15 @@ export function RegisterPage() {
           <p className="mt-1.5 text-sm text-muted">
             {isStylist
               ? 'Publiez votre vitrine. Les clients vous contactent ensuite sur WhatsApp.'
-              : 'Parcourez les œuvres des stylistes et gardez vos favoris sur votre compte.'}
+              : 'Parcourez les œuvres des stylistes et gardez vos favoris sur cet appareil.'}
           </p>
         </div>
 
         <AuthRoleToggle value={role} onChange={setRole} />
+
+        <div className="mt-3">
+          <DemoAuthBanner />
+        </div>
 
         <form
           onSubmit={onSubmit}

@@ -104,3 +104,12 @@ textarea:focus-visible {
   white-space: nowrap;
   border-width: 0;
 }
+
+@keyframes toast-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}

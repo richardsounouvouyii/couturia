@@ -18,12 +18,8 @@ import { CreationCard } from '@/components/CreationCard'
 import { DocumentMeta } from '@/components/DocumentMeta'
 import atelierImage from '@/assets/images/atelier.jpg'
 import heroImage from '@/assets/images/hero.jpg'
-import {
-  MOCK_CATEGORIES,
-  MOCK_CREATIONS,
-  MOCK_FEATURES,
-  MOCK_STATS,
-} from '@/lib/mock-data'
+import { listPublicCreations } from '@/lib/catalogue'
+import { MOCK_CATEGORIES, MOCK_FEATURES, MOCK_STATS } from '@/lib/mock-data'
 
 const MOBILE_QUICK_CATEGORIES = [
   { id: 'robes', label: 'Robes', icon: 'Shirt' },
@@ -48,10 +44,11 @@ const iconMap = {
 export function HomePage() {
   const [activeCategory, setActiveCategory] = useState('tous')
 
+  const publicCreations = listPublicCreations()
   const filteredCreations =
     activeCategory === 'tous'
-      ? MOCK_CREATIONS
-      : MOCK_CREATIONS.filter(
+      ? publicCreations
+      : publicCreations.filter(
           (item) => item.categorie.toLowerCase() === activeCategory,
         )
 
@@ -270,18 +267,23 @@ export function HomePage() {
       </section>
 
       <section id="a-propos" className="bg-[#700d39] text-white">
-        <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
-          {MOCK_STATS.map((stat) => (
-            <div key={stat.label} className="text-center lg:text-left">
-              <p
-                className="font-display text-3xl font-semibold sm:text-4xl"
-                style={{ color: '#e8d5b5' }}
-              >
-                {stat.value}
-              </p>
-              <p className="mt-2 text-sm text-white/85">{stat.label}</p>
-            </div>
-          ))}
+        <div className="mx-auto max-w-7xl px-4 py-10 lg:px-8 lg:py-12">
+          <p className="text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-[#e8d5b5]/90 lg:text-left">
+            À propos · chiffres illustratifs
+          </p>
+          <div className="mt-6 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            {MOCK_STATS.map((stat) => (
+              <div key={stat.label} className="text-center lg:text-left">
+                <p
+                  className="font-display text-3xl font-semibold sm:text-4xl"
+                  style={{ color: '#e8d5b5' }}
+                >
+                  {stat.value}
+                </p>
+                <p className="mt-2 text-sm text-white/85">{stat.label}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     </div>

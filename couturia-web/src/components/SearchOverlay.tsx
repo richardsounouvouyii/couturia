@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Search, Store, X } from 'lucide-react'
-import { MOCK_ATELIERS, MOCK_CREATIONS } from '@/lib/mock-data'
+import { listPublicCreations } from '@/lib/catalogue'
+import { MOCK_ATELIERS } from '@/lib/mock-data'
 
 type Props = {
   open: boolean
@@ -29,22 +30,25 @@ export function SearchOverlay({ open, onClose }: Props) {
   }, [open, onClose])
 
   const results = useMemo(() => {
+    const creations = listPublicCreations()
     const q = query.trim().toLowerCase()
     if (!q) {
       return {
-        creations: MOCK_CREATIONS.slice(0, 4),
+        creations: creations.slice(0, 4),
         ateliers: MOCK_ATELIERS.slice(0, 3),
       }
     }
 
     return {
-      creations: MOCK_CREATIONS.filter(
-        (item) =>
-          item.titre.toLowerCase().includes(q) ||
-          item.atelier.toLowerCase().includes(q) ||
-          item.ville.toLowerCase().includes(q) ||
-          item.categorie.toLowerCase().includes(q),
-      ).slice(0, 6),
+      creations: creations
+        .filter(
+          (item) =>
+            item.titre.toLowerCase().includes(q) ||
+            item.atelier.toLowerCase().includes(q) ||
+            item.ville.toLowerCase().includes(q) ||
+            item.categorie.toLowerCase().includes(q),
+        )
+        .slice(0, 6),
       ateliers: MOCK_ATELIERS.filter(
         (item) =>
           item.nom.toLowerCase().includes(q) ||

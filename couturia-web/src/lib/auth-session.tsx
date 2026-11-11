@@ -69,7 +69,16 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
   }, [user])
 
   const signIn = useCallback((next: AuthUser) => {
-    setUser(next)
+    const previous = readStoredUser()
+    const merged: AuthUser = {
+      ...next,
+      atelierName: next.atelierName || previous?.atelierName,
+      phone: next.phone || (previous?.email === next.email ? previous.phone : undefined),
+      fullName:
+        next.fullName ||
+        (previous?.email === next.email ? previous.fullName : next.fullName),
+    }
+    setUser(merged)
   }, [])
 
   const signOut = useCallback(() => {

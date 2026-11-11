@@ -19,6 +19,18 @@ export type MockCreation = {
   note: number
   avis: number
   image: string
+  /** Angles / galerie (si absent, on retombe sur `image`). */
+  images?: string[]
+  /** Libellés d’angle alignés sur `images` (face, dos, côté…). */
+  photoAngles?: Array<'face' | 'dos' | 'cote' | 'detail' | 'autre'>
+  /** Description libre (créations styliste). */
+  description?: string
+  /** WhatsApp prioritaire (ex. numéro saisi à l’inscription styliste). */
+  telephoneWhatsapp?: string
+  /** Pour tri « Récentes » (ISO). */
+  updatedAt?: string
+  /** Notes/avis fictifs (créations styliste démo). */
+  ratingsDemo?: boolean
 }
 
 export type MockAtelier = {
@@ -171,6 +183,8 @@ export const MOCK_CREATIONS: MockCreation[] = [
     note: 4.9,
     avis: 128,
     image: creation1,
+    images: [creation1, heroImage, creation4, atelierCover],
+    updatedAt: '2026-03-01T10:00:00.000Z',
   },
   {
     id: 'c2',
@@ -183,6 +197,8 @@ export const MOCK_CREATIONS: MockCreation[] = [
     note: 4.8,
     avis: 96,
     image: creation2,
+    images: [creation2, heroImage, atelierCover, creation1],
+    updatedAt: '2026-02-20T10:00:00.000Z',
   },
   {
     id: 'c3',
@@ -195,6 +211,8 @@ export const MOCK_CREATIONS: MockCreation[] = [
     note: 4.7,
     avis: 54,
     image: creation3,
+    images: [creation3, creation1, heroImage],
+    updatedAt: '2026-02-10T10:00:00.000Z',
   },
   {
     id: 'c4',
@@ -207,6 +225,8 @@ export const MOCK_CREATIONS: MockCreation[] = [
     note: 5,
     avis: 67,
     image: creation4,
+    images: [creation4, creation1, heroImage, creation5],
+    updatedAt: '2026-01-28T10:00:00.000Z',
   },
   {
     id: 'c5',
@@ -219,6 +239,8 @@ export const MOCK_CREATIONS: MockCreation[] = [
     note: 4.9,
     avis: 214,
     image: creation5,
+    images: [creation5, accessoires, creation4],
+    updatedAt: '2026-01-15T10:00:00.000Z',
   },
 ]
 
@@ -270,4 +292,28 @@ export function getCreationsByAtelier(atelierId: string) {
 
 export function getCreationById(id: string) {
   return MOCK_CREATIONS.find((creation) => creation.id === id)
+}
+
+/** Photos de la création (angles), avec repli sur la couverture. */
+export function getCreationImages(creation: MockCreation) {
+  if (creation.images && creation.images.length > 0) return creation.images
+  return [creation.image]
+}
+
+const ANGLE_LABELS: Record<NonNullable<MockCreation['photoAngles']>[number], string> = {
+  face: 'Face',
+  dos: 'Dos',
+  cote: 'Côté',
+  detail: 'Détail',
+  autre: 'Autre',
+}
+
+/** Libellés d’angle alignés sur les photos (vide si non renseignés). */
+export function getCreationPhotoLabels(creation: MockCreation) {
+  const images = getCreationImages(creation)
+  if (!creation.photoAngles?.length) return images.map(() => '')
+  return images.map((_, index) => {
+    const angle = creation.photoAngles?.[index]
+    return angle ? ANGLE_LABELS[angle] : ''
+  })
 }

@@ -15,7 +15,7 @@ const options: Array<{
   {
     id: 'client',
     label: 'Client',
-    hint: 'Parcourir & favoris',
+    hint: 'Parcourir la vitrine',
     icon: UserRound,
   },
   {

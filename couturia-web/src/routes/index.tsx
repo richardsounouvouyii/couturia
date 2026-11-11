@@ -1,4 +1,5 @@
 import { Route, Routes } from 'react-router-dom'
+import { RequireStylist } from '@/components/RequireStylist'
 import { PublicLayout } from '@/layouts/PublicLayout'
 import { AtelierDetailPage } from '@/pages/AtelierDetailPage'
 import { AteliersPage } from '@/pages/AteliersPage'
@@ -23,15 +24,37 @@ export function AppRoutes() {
         <Route path="ateliers" element={<AteliersPage />} />
         <Route path="ateliers/:id" element={<AtelierDetailPage />} />
         <Route path="favoris" element={<FavorisPage />} />
-        <Route path="espace-styliste" element={<EspaceStylistePage />} />
-        <Route path="espace-styliste/creations" element={<StylistCreationsPage />} />
+        <Route
+          path="espace-styliste"
+          element={
+            <RequireStylist>
+              <EspaceStylistePage />
+            </RequireStylist>
+          }
+        />
+        <Route
+          path="espace-styliste/creations"
+          element={
+            <RequireStylist>
+              <StylistCreationsPage />
+            </RequireStylist>
+          }
+        />
         <Route
           path="espace-styliste/creations/nouvelle"
-          element={<StylistCreationFormPage />}
+          element={
+            <RequireStylist>
+              <StylistCreationFormPage />
+            </RequireStylist>
+          }
         />
         <Route
           path="espace-styliste/creations/:id/modifier"
-          element={<StylistCreationFormPage />}
+          element={
+            <RequireStylist>
+              <StylistCreationFormPage />
+            </RequireStylist>
+          }
         />
         <Route path="connexion" element={<LoginPage />} />
         <Route path="inscription" element={<RegisterPage />} />

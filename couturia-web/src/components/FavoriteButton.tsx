@@ -1,5 +1,6 @@
 import { Heart } from 'lucide-react'
 import { useFavorites } from '@/lib/favorites'
+import { useToast } from '@/lib/toast'
 
 type Props = {
   creationId: string
@@ -9,6 +10,7 @@ type Props = {
 
 export function FavoriteButton({ creationId, className = '', size = 'sm' }: Props) {
   const { isFavorite, toggleFavorite } = useFavorites()
+  const { showToast } = useToast()
   const active = isFavorite(creationId)
 
   return (
@@ -27,7 +29,9 @@ export function FavoriteButton({ creationId, className = '', size = 'sm' }: Prop
       onClick={(event) => {
         event.preventDefault()
         event.stopPropagation()
+        const willRemove = active
         toggleFavorite(creationId)
+        showToast(willRemove ? 'favorite-remove' : 'favorite-add')
       }}
     >
       <Heart

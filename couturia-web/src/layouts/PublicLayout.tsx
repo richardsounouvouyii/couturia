@@ -15,7 +15,7 @@ export function PublicLayout() {
       <div className="relative z-[1] flex min-h-screen flex-col bg-transparent text-heading">
         <ScrollToTop />
         <Navbar />
-        <main className="flex-1 bg-transparent">
+        <main className="flex-1 bg-transparent pb-20 lg:pb-0">
           <Outlet />
         </main>
         <Footer />
