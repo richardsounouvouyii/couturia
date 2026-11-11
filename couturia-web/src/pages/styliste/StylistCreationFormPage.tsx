@@ -40,6 +40,7 @@ export function StylistCreationFormPage() {
   )
   const [description, setDescription] = useState(existing?.description ?? '')
   const [images, setImages] = useState<string[]>(existing?.images ?? [])
+  const [activeIndex, setActiveIndex] = useState(0)
   const [message, setMessage] = useState<string | null>(null)
   const [imageError, setImageError] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
@@ -67,7 +68,12 @@ export function StylistCreationFormPage() {
       for (const file of files.slice(0, remaining)) {
         next.push(await readImageFileAsDataUrl(file))
       }
-      setImages((current) => [...current, ...next])
+      setImages((current) => {
+        const start = current.length
+        const merged = [...current, ...next]
+        setActiveIndex(start)
+        return merged
+      })
       if (files.length > remaining) {
         setImageError(`Seules ${remaining} photo(s) ont été ajoutées (max ${MAX_IMAGES}).`)
       }
@@ -79,7 +85,16 @@ export function StylistCreationFormPage() {
   }
 
   function removeImage(index: number) {
-    setImages((current) => current.filter((_, i) => i !== index))
+    setImages((current) => {
+      const next = current.filter((_, i) => i !== index)
+      setActiveIndex((prev) => {
+        if (next.length === 0) return 0
+        if (prev > index) return prev - 1
+        if (prev >= next.length) return next.length - 1
+        return prev
+      })
+      return next
+    })
   }
 
   function makeCover(index: number) {
@@ -87,6 +102,7 @@ export function StylistCreationFormPage() {
       if (index <= 0 || index >= current.length) return current
       const next = [...current]
       const [picked] = next.splice(index, 1)
+      setActiveIndex(0)
       return [picked, ...next]
     })
   }
@@ -207,8 +223,9 @@ export function StylistCreationFormPage() {
               </span>
               <input
                 type="number"
+                inputMode="numeric"
                 min={0}
-                step={500}
+                step="any"
                 value={prix}
                 onChange={(e) => setPrix(e.target.value)}
                 placeholder="Optionnel"
@@ -264,40 +281,59 @@ export function StylistCreationFormPage() {
             {images.length > 0 ? (
               <>
                 <div className="mt-3">
-                  <CreationTurnViewer images={images} alt={titre || 'Création'} />
+                  <CreationTurnViewer
+                    images={images}
+                    alt={titre || 'Création'}
+                    activeIndex={activeIndex}
+                    onActiveIndexChange={setActiveIndex}
+                  />
                 </div>
 
-                <ul className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
-                  {images.map((src, index) => (
-                    <li key={`${index}-${src.slice(0, 24)}`} className="relative">
-                      <button
-                        type="button"
-                        onClick={() => makeCover(index)}
-                        className={[
-                          'block w-full overflow-hidden rounded-xl border-2',
-                          index === 0 ? 'border-primary' : 'border-line',
-                        ].join(' ')}
-                        aria-label={
-                          index === 0 ? 'Photo de couverture' : 'Définir comme couverture'
-                        }
-                      >
-                        <img src={src} alt="" className="aspect-square w-full object-cover" />
-                      </button>
-                      {index === 0 ? (
-                        <span className="absolute top-1 left-1 rounded-full bg-primary px-1.5 py-0.5 text-[9px] font-semibold text-white">
-                          Couverture
-                        </span>
-                      ) : null}
-                      <button
-                        type="button"
-                        onClick={() => removeImage(index)}
-                        className="absolute top-1 right-1 grid size-7 place-items-center rounded-full bg-white/95 text-primary shadow-sm"
-                        aria-label="Supprimer cette photo"
-                      >
-                        <Trash2 className="size-3.5" />
-                      </button>
-                    </li>
-                  ))}
+                <p className="mt-3 text-xs text-muted">
+                  Touchez une miniature pour l’afficher. « Couverture » = photo principale.
+                </p>
+                <ul className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                  {images.map((src, index) => {
+                    const isActive = index === activeIndex
+                    const isCover = index === 0
+                    return (
+                      <li key={`${index}-${src.slice(0, 24)}`} className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setActiveIndex(index)}
+                          className={[
+                            'block w-full overflow-hidden rounded-xl border-2 transition',
+                            isActive ? 'border-primary ring-2 ring-primary/25' : 'border-line',
+                          ].join(' ')}
+                          aria-label={`Voir la photo ${index + 1}`}
+                          aria-current={isActive ? 'true' : undefined}
+                        >
+                          <img src={src} alt="" className="aspect-square w-full object-cover" />
+                        </button>
+                        {isCover ? (
+                          <span className="absolute top-1 left-1 rounded-full bg-primary px-1.5 py-0.5 text-[9px] font-semibold text-white">
+                            Couverture
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => makeCover(index)}
+                            className="absolute bottom-1 left-1 rounded-full bg-white/95 px-1.5 py-0.5 text-[9px] font-semibold text-heading shadow-sm"
+                          >
+                            Couverture
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute top-1 right-1 grid size-7 place-items-center rounded-full bg-white/95 text-primary shadow-sm"
+                          aria-label="Supprimer cette photo"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </button>
+                      </li>
+                    )
+                  })}
                 </ul>
               </>
             ) : null}
