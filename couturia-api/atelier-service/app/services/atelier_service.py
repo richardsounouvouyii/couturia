@@ -29,6 +29,15 @@ class AtelierService:
             )
         return AtelierPublic.model_validate(atelier)
 
+    def get_by_owner(self, owner_user_id: UUID) -> AtelierPublic:
+        atelier = self.repo.get_by_owner_user_id(owner_user_id)
+        if atelier is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Aucun atelier pour ce compte.",
+            )
+        return AtelierPublic.model_validate(atelier)
+
     def create(self, payload: AtelierCreate) -> AtelierPublic:
         atelier = self.repo.create(payload)
         return AtelierPublic.model_validate(atelier)

@@ -83,3 +83,10 @@ pytest
 ## Scénario métier futur
 
 Inscription → publication création → demande → devis → acceptation (`devis.accepte` via RabbitMQ) → commande → suivi des statuts. Voir `AGENTS.md` section 5.
+
+Champ	Valeur
+Username
+couturia
+Password
+couturia_dev
+Connexion AMQP (si un outil le demande)

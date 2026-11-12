@@ -128,8 +128,11 @@ export function Navbar() {
 
             {isAuthenticated ? (
               <>
-                <span className="hidden max-w-[9rem] truncate text-sm font-medium text-heading sm:inline">
+                <span className="hidden max-w-[11rem] truncate text-sm font-medium text-heading sm:inline">
                   {user?.atelierName || user?.fullName}
+                  <span className="ml-1 text-[11px] font-semibold text-muted">
+                    ({isStylist ? 'styliste' : user?.role})
+                  </span>
                 </span>
                 <button
                   type="button"

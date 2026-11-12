@@ -30,3 +30,8 @@ def test_create_list_and_get_atelier(client):
     detail = client.get(f"/api/ateliers/{atelier_id}")
     assert detail.status_code == 200
     assert detail.json()["nom"] == "Atelier Aïcha"
+
+    by_owner = client.get(f"/api/ateliers/by-owner/{OWNER_ID}")
+    assert by_owner.status_code == 200
+    assert by_owner.json()["id"] == atelier_id
+    assert by_owner.json()["telephone_whatsapp"] == "+22990000000"

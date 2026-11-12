@@ -15,6 +15,7 @@ class CreationCreate(BaseModel):
     prix_indicatif: int | None = Field(default=None, ge=0)
     devise: str = Field(default="XOF", min_length=3, max_length=3)
     image_url: str | None = Field(default=None, max_length=500)
+    images: list[str] = Field(default_factory=list)
     ville: str | None = Field(default=None, max_length=120)
     status: CreationStatus = CreationStatus.publiee
     is_public: bool = True
@@ -31,6 +32,7 @@ class CreationPublic(BaseModel):
     prix_indicatif: int | None
     devise: str
     image_url: str | None
+    images: list[str] = Field(default_factory=list)
     ville: str | None
     status: CreationStatus
     is_public: bool

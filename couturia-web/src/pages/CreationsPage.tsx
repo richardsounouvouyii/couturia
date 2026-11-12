@@ -12,8 +12,8 @@ import {
 } from 'lucide-react'
 import { CreationCard } from '@/components/CreationCard'
 import { DocumentMeta } from '@/components/DocumentMeta'
-import { listPublicCreations } from '@/lib/catalogue'
 import { MOCK_CATEGORIES } from '@/lib/mock-data'
+import { usePublicCreations } from '@/lib/use-public-creations'
 
 const iconMap = {
   Sparkles,
@@ -36,6 +36,7 @@ function categoryIdFromLabel(label: string): string {
 export function CreationsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const initialCategory = categoryIdFromLabel(searchParams.get('categorie') ?? 'tous')
+  const { items: publicCreations } = usePublicCreations()
 
   const [category, setCategory] = useState(initialCategory)
   const [query, setQuery] = useState(searchParams.get('q') ?? '')
@@ -45,13 +46,13 @@ export function CreationsPage() {
   )
 
   const villes = useMemo(() => {
-    return Array.from(new Set(listPublicCreations().map((item) => item.ville))).sort(
-      (a, b) => a.localeCompare(b, 'fr'),
-    )
-  }, [])
+    return Array.from(
+      new Set(publicCreations.map((item) => item.ville).filter(Boolean)),
+    ).sort((a, b) => a.localeCompare(b, 'fr'))
+  }, [publicCreations])
 
   const filtered = useMemo(() => {
-    let items = [...listPublicCreations()]
+    let items = [...publicCreations]
 
     if (category !== 'tous') {
       const catLabel = MOCK_CATEGORIES.find((c) => c.id === category)?.label
@@ -106,7 +107,7 @@ export function CreationsPage() {
     })
 
     return items
-  }, [category, query, ville, sort])
+  }, [publicCreations, category, query, ville, sort])
 
   const hasFilters =
     category !== 'tous' || ville !== 'Toutes' || query.trim() !== '' || sort !== 'recent'

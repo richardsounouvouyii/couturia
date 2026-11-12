@@ -18,7 +18,7 @@ import { CreationCard } from '@/components/CreationCard'
 import { DocumentMeta } from '@/components/DocumentMeta'
 import atelierImage from '@/assets/images/atelier.jpg'
 import heroImage from '@/assets/images/hero.jpg'
-import { listPublicCreations } from '@/lib/catalogue'
+import { usePublicCreations } from '@/lib/use-public-creations'
 import { MOCK_CATEGORIES, MOCK_FEATURES, MOCK_STATS } from '@/lib/mock-data'
 
 const MOBILE_QUICK_CATEGORIES = [
@@ -44,7 +44,7 @@ const iconMap = {
 export function HomePage() {
   const [activeCategory, setActiveCategory] = useState('tous')
 
-  const publicCreations = listPublicCreations()
+  const { items: publicCreations } = usePublicCreations()
   const filteredCreations =
     activeCategory === 'tous'
       ? publicCreations

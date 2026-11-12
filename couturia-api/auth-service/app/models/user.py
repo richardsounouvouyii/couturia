@@ -9,9 +9,12 @@ from app.db import Base
 
 
 class UserRole(str, enum.Enum):
+    """Rôles globaux — ne pas inventer de libellés parallèle côté front."""
+
     client = "client"
-    professionnel = "professionnel"
+    styliste = "styliste"
     admin = "admin"
+    super_admin = "super_admin"
 
 
 class User(Base):

@@ -102,8 +102,12 @@ services:
       CATALOGUE_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-couturia}:${POSTGRES_PASSWORD:-couturia_dev}@postgres:5432/catalogue_db
       RABBITMQ_URL: amqp://${RABBITMQ_USER:-couturia}:${RABBITMQ_PASSWORD:-couturia_dev}@rabbitmq:5672/
       CATALOGUE_SERVICE_PORT: "8003"
+      CATALOGUE_MEDIA_ROOT: /app/media
+      CATALOGUE_PUBLIC_URL: http://localhost:8003
     ports:
       - "${CATALOGUE_SERVICE_PORT:-8003}:8003"
+    volumes:
+      - catalogue_media:/app/media
     depends_on:
       postgres:
         condition: service_healthy
@@ -118,3 +122,4 @@ services:
 volumes:
   postgres_data:
   rabbitmq_data:
+  catalogue_media:

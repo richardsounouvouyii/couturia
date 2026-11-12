@@ -3,6 +3,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import (
+    JSON,
     Boolean,
     DateTime,
     Enum,
@@ -40,6 +41,8 @@ class Creation(Base):
     prix_indicatif: Mapped[int | None] = mapped_column(Integer, nullable=True)
     devise: Mapped[str] = mapped_column(String(3), default="XOF")
     image_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    # Galerie complète (URLs publiques), la 1re = couverture = image_url
+    images: Mapped[list] = mapped_column(JSON, default=list)
     ville: Mapped[str | None] = mapped_column(String(120), nullable=True, index=True)
     status: Mapped[CreationStatus] = mapped_column(
         Enum(CreationStatus, name="creation_status", native_enum=False),

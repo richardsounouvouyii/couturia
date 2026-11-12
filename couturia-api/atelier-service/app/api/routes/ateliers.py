@@ -18,6 +18,12 @@ def list_ateliers(
     return AtelierService(db).list_public(ville=ville, specialite=specialite)
 
 
+# Avant /{atelier_id} pour ne pas confondre "by-owner" avec un UUID
+@router.get("/by-owner/{owner_user_id}", response_model=AtelierPublic)
+def get_atelier_by_owner(owner_user_id: UUID, db: DbSession) -> AtelierPublic:
+    return AtelierService(db).get_by_owner(owner_user_id)
+
+
 @router.get("/{atelier_id}", response_model=AtelierPublic)
 def get_atelier(atelier_id: UUID, db: DbSession) -> AtelierPublic:
     return AtelierService(db).get_public(atelier_id)

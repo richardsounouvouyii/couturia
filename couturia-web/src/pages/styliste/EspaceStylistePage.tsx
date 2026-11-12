@@ -1,15 +1,42 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Images, MessageCircle, Plus, Scissors } from 'lucide-react'
+import { Images, MapPin, MessageCircle, Plus } from 'lucide-react'
 import { DocumentMeta } from '@/components/DocumentMeta'
+import { listAtelierCreationsMerged } from '@/lib/catalogue'
 import { useAuthSession } from '@/lib/auth-session'
-import { listStylistCreations, STYLIST_DEMO } from '@/lib/stylist-creations'
+import type { MockCreation } from '@/lib/mock-data'
+import { CREATION_IMAGE_PLACEHOLDER } from '@/lib/catalogue'
 
 export function EspaceStylistePage() {
   const { user } = useAuthSession()
-  const creations = listStylistCreations()
-  const published = creations.filter((c) => c.published).length
-  const atelierName = user?.atelierName || user?.fullName || STYLIST_DEMO.atelierName
+  const [creations, setCreations] = useState<MockCreation[]>([])
+  const [loading, setLoading] = useState(Boolean(user?.atelierId))
+
+  const atelierName = user?.atelierName || user?.fullName || 'Mon atelier'
   const phone = user?.phone
+  const ville = user?.ville
+  const specialite = user?.specialite
+  const published = creations.length
+
+  useEffect(() => {
+    if (!user?.atelierId) {
+      setCreations([])
+      setLoading(false)
+      return
+    }
+    let cancelled = false
+    setLoading(true)
+    void listAtelierCreationsMerged(user.atelierId)
+      .then((items) => {
+        if (!cancelled) setCreations(items)
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [user?.atelierId])
 
   return (
     <div className="bg-page">
@@ -21,18 +48,35 @@ export function EspaceStylistePage() {
       />
 
       <section className="border-b border-line bg-surface">
-        <div className="mx-auto max-w-7xl px-4 py-5 lg:px-8 lg:py-7">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gold">
-            Espace styliste · démo
-          </p>
-          <h1 className="font-display mt-2 text-2xl font-semibold text-primary sm:text-3xl">
+        <div className="mx-auto max-w-3xl px-4 py-6 lg:px-8 lg:py-8">
+          <h1 className="font-display text-2xl font-semibold text-primary sm:text-3xl">
             {atelierName}
           </h1>
-          <p className="mt-2 max-w-2xl text-sm text-muted">
-            Publiez et modifiez vos créations (sauvegardées sur cet appareil).
-            {phone ? ` Contact WhatsApp : ${phone}.` : null}
-          </p>
-          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+          {user?.fullName && user.fullName !== atelierName ? (
+            <p className="mt-1 text-sm text-muted">{user.fullName}</p>
+          ) : null}
+
+          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
+            {specialite ? <span>{specialite}</span> : null}
+            {specialite && ville ? <span aria-hidden>·</span> : null}
+            {ville ? (
+              <span className="inline-flex items-center gap-1">
+                <MapPin className="size-3.5 shrink-0" aria-hidden />
+                {ville}
+              </span>
+            ) : null}
+            {phone ? (
+              <>
+                {(specialite || ville) && <span aria-hidden>·</span>}
+                <span className="inline-flex items-center gap-1">
+                  <MessageCircle className="size-3.5 shrink-0 text-[#25D366]" aria-hidden />
+                  {phone}
+                </span>
+              </>
+            ) : null}
+          </div>
+
+          <div className="mt-5 flex flex-col gap-2 sm:flex-row">
             <Link
               to="/espace-styliste/creations/nouvelle"
               className="btn btn-primary h-11 min-h-11 rounded-xl gap-2"
@@ -46,42 +90,87 @@ export function EspaceStylistePage() {
             >
               <Images className="size-4" aria-hidden />
               Mes créations
+              {creations.length > 0 ? (
+                <span className="rounded-md bg-page px-1.5 py-0.5 text-xs font-semibold text-primary">
+                  {creations.length}
+                </span>
+              ) : null}
             </Link>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-4 px-4 py-6 sm:grid-cols-3 lg:px-8">
-        <div className="rounded-2xl border border-line bg-white p-5">
-          <p className="text-xs uppercase tracking-wide text-muted">Créations</p>
-          <p className="font-display mt-2 text-3xl font-semibold text-primary">
-            {creations.length}
-          </p>
-        </div>
-        <div className="rounded-2xl border border-line bg-white p-5">
-          <p className="text-xs uppercase tracking-wide text-muted">Publiées</p>
-          <p className="font-display mt-2 text-3xl font-semibold text-primary">{published}</p>
-        </div>
-        <div className="rounded-2xl border border-line bg-white p-5">
-          <p className="text-xs uppercase tracking-wide text-muted">Contact</p>
-          <p className="mt-2 inline-flex items-center gap-2 text-sm font-medium text-heading">
-            <MessageCircle className="size-4 text-[#25D366]" aria-hidden />
-            WhatsApp vitrine
-          </p>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-4 pb-10 lg:px-8">
-        <div className="rounded-2xl border border-line bg-white p-5 sm:p-6">
-          <div className="flex items-center gap-2 text-primary">
-            <Scissors className="size-5" aria-hidden />
-            <h2 className="font-display text-xl font-semibold">Prochaine étape</h2>
+      <section className="mx-auto max-w-3xl px-4 py-6 lg:px-8">
+        {loading ? (
+          <p className="text-center text-sm text-muted">Chargement de vos créations…</p>
+        ) : creations.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-line bg-white/70 px-5 py-10 text-center">
+            <p className="font-display text-lg font-semibold text-primary">
+              Aucune création pour l’instant
+            </p>
+            <p className="mx-auto mt-2 max-w-sm text-sm text-muted">
+              Ajoutez votre première pièce pour commencer votre vitrine.
+            </p>
+            <Link
+              to="/espace-styliste/creations/nouvelle"
+              className="btn btn-primary mt-5 rounded-xl gap-2"
+            >
+              <Plus className="size-4" aria-hidden />
+              Publier une création
+            </Link>
           </div>
-          <p className="mt-2 text-sm text-muted">
-            Connectez auth-service pour sécuriser cet espace, puis catalogue-service pour
-            publier réellement vos pièces.
-          </p>
-        </div>
+        ) : (
+          <div>
+            <div className="flex items-baseline justify-between gap-3">
+              <h2 className="font-display text-lg font-semibold text-primary">
+                Vos créations
+              </h2>
+              <p className="text-sm text-muted">
+                {published} publiée{published > 1 ? 's' : ''}
+              </p>
+            </div>
+            <ul className="mt-4 divide-y divide-line overflow-hidden rounded-2xl border border-line bg-white">
+              {creations.slice(0, 5).map((item) => (
+                <li key={item.id}>
+                  <Link
+                    to={
+                      item.id.startsWith('sc-')
+                        ? `/espace-styliste/creations/${item.id}/modifier`
+                        : `/catalogue/${item.id}`
+                    }
+                    className="flex items-center gap-3 px-4 py-3 transition hover:bg-page"
+                  >
+                    <img
+                      src={item.image || CREATION_IMAGE_PLACEHOLDER}
+                      alt=""
+                      className="size-14 shrink-0 rounded-lg object-cover"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-medium text-heading">{item.titre}</p>
+                      <p className="mt-0.5 text-xs text-muted">
+                        {item.categorie}
+                        {' · '}
+                        {item.id.startsWith('sc-') ? 'Locale' : 'Catalogue'}
+                      </p>
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            {creations.length > 5 ? (
+              <Link
+                to="/espace-styliste/creations"
+                className="mt-3 inline-block text-sm font-semibold text-primary hover:underline"
+              >
+                Voir toutes ({creations.length})
+              </Link>
+            ) : null}
+          </div>
+        )}
+
+        <p className="mt-6 text-center text-xs text-muted">
+          Vos publications sont sur le catalogue : visibles par les autres avec leurs photos.
+        </p>
       </section>
     </div>
   )

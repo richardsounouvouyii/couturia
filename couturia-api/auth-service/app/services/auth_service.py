@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.events.publisher import EventPublisher
 from app.models.user import User, UserRole
 from app.repositories.user_repository import UserRepository
+from app.roles import can_self_register
 from app.schemas.auth import LoginRequest, RegisterRequest, TokenResponse
 from app.schemas.user import UserPublic
 from app.security import create_access_token, hash_password, verify_password
@@ -15,10 +16,12 @@ class AuthService:
         self.events = events or EventPublisher()
 
     def register(self, payload: RegisterRequest) -> TokenResponse:
-        if payload.role == UserRole.admin:
+        role = UserRole(payload.role.value)
+
+        if not can_self_register(role):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Le rôle admin ne peut pas être auto-attribué.",
+                detail="Ce rôle ne peut pas être choisi à l’inscription.",
             )
 
         if self.users.get_by_email(payload.email) is not None:
@@ -31,7 +34,7 @@ class AuthService:
             email=payload.email,
             password_hash=hash_password(payload.password),
             full_name=payload.full_name,
-            role=payload.role,
+            role=role,
         )
         self.events.publish(
             "utilisateur.inscrit",

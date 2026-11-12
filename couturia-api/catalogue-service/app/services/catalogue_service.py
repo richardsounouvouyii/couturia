@@ -61,7 +61,13 @@ class CatalogueService:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Catégorie introuvable.",
             )
-        creation = self.creations.create(payload)
+        # Couverture = 1re image si image_url absent
+        data = payload.model_copy()
+        if not data.image_url and data.images:
+            data.image_url = data.images[0]
+        if data.image_url and data.image_url not in data.images:
+            data.images = [data.image_url, *data.images]
+        creation = self.creations.create(data)
         self.events.publish(
             "creation.publiee",
             {

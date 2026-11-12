@@ -11,4 +11,13 @@ Service d’authentification Couturia : inscription, connexion, rôles et JWT.
 | POST | `/api/auth/login` | Connexion |
 | GET | `/api/auth/me` | Profil du porteur du JWT |
 
-Rôles : `client`, `professionnel`, `admin`.
+Rôles :
+
+| Rôle | Inscription publique | Usage |
+|------|----------------------|--------|
+| `client` | oui | Visiteur / acheteur |
+| `styliste` | oui | Professionnel (vitrine) |
+| `admin` | non | Back-office (plus tard) |
+| `super_admin` | non | Administration plateforme (plus tard) |
+
+L’ancien libellé `professionnel` est migré vers `styliste`.

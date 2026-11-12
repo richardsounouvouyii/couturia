@@ -17,6 +17,9 @@ class Settings(BaseSettings):
         "postgresql+psycopg://couturia:couturia_dev@localhost:5432/catalogue_db"
     )
     rabbitmq_url: str = "amqp://couturia:couturia_dev@localhost:5672/"
+    # Dossier disque des images + URL vue par le navigateur
+    catalogue_media_root: str = "media"
+    catalogue_public_url: str = "http://localhost:8003"
 
 
 @lru_cache

@@ -28,6 +28,15 @@ class AtelierRepository:
     def get_by_id(self, atelier_id: UUID) -> Atelier | None:
         return self.db.get(Atelier, atelier_id)
 
+    def get_by_owner_user_id(self, owner_user_id: UUID) -> Atelier | None:
+        stmt = (
+            select(Atelier)
+            .where(Atelier.owner_user_id == owner_user_id)
+            .order_by(Atelier.created_at.desc())
+            .limit(1)
+        )
+        return self.db.scalars(stmt).first()
+
     def create(self, payload: AtelierCreate) -> Atelier:
         atelier = Atelier(**payload.model_dump())
         self.db.add(atelier)

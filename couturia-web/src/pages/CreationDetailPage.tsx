@@ -19,14 +19,14 @@ import { DocumentMeta } from '@/components/DocumentMeta'
 import { FavoriteButton } from '@/components/FavoriteButton'
 import { WhatsAppButton } from '@/components/WhatsAppButton'
 import { formatFcfa, formatPhoneDisplay } from '@/lib/format'
-import { resolvePublicCreationById } from '@/lib/catalogue'
 import { getAtelierById, getCreationImages, getCreationPhotoLabels } from '@/lib/mock-data'
 import { facebookShareUrl, nativeShare, whatsappShareUrl } from '@/lib/share'
+import { usePublicCreation } from '@/lib/use-public-creations'
 import { absoluteUrl, creationWhatsAppMessage } from '@/lib/whatsapp'
 
 export function CreationDetailPage() {
   const { id } = useParams()
-  const creation = id ? resolvePublicCreationById(id) : undefined
+  const { creation, loading } = usePublicCreation(id)
   const atelier = creation ? getAtelierById(creation.atelierId) : undefined
   const images = creation ? getCreationImages(creation) : []
   const photoLabels = creation ? getCreationPhotoLabels(creation) : []
@@ -38,6 +38,15 @@ export function CreationDetailPage() {
     setActiveIndex(0)
     setGalleryOpen(false)
   }, [creation?.id])
+
+  if (loading && !creation) {
+    return (
+      <div className="mx-auto max-w-lg px-4 py-20 text-center">
+        <DocumentMeta title="Création" noIndex />
+        <p className="text-sm text-muted">Chargement…</p>
+      </div>
+    )
+  }
 
   if (!creation) {
     return (

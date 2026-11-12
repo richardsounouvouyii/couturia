@@ -5,8 +5,17 @@ import { useAuthSession } from '@/lib/auth-session'
 
 /** Protège les routes espace styliste (rôle + session). */
 export function RequireStylist({ children }: { children: ReactNode }) {
-  const { isAuthenticated, isStylist } = useAuthSession()
+  const { isAuthenticated, isStylist, isBootstrapping } = useAuthSession()
   const location = useLocation()
+
+  // Évite une redirection login pendant le GET /me au démarrage
+  if (isBootstrapping) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center px-4">
+        <p className="text-sm text-muted">Vérification de la session…</p>
+      </div>
+    )
+  }
 
   if (!isAuthenticated) {
     return (

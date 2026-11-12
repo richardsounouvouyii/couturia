@@ -33,6 +33,8 @@ export type StylistCreationDraft = {
   images: string[]
   /** WhatsApp du styliste (inscription). */
   telephoneWhatsapp?: string
+  /** Id côté catalogue-service après publication API. */
+  catalogueId?: string
   published: boolean
   updatedAt: string
 }
@@ -99,6 +101,10 @@ function normalize(
       typeof item.telephoneWhatsapp === 'string' && item.telephoneWhatsapp.trim()
         ? item.telephoneWhatsapp.trim()
         : undefined,
+    catalogueId:
+      typeof item.catalogueId === 'string' && item.catalogueId.trim()
+        ? item.catalogueId.trim()
+        : undefined,
     published: Boolean(item.published),
     updatedAt:
       typeof item.updatedAt === 'string' ? item.updatedAt : new Date().toISOString(),
@@ -108,38 +114,20 @@ function normalize(
 function readAll(): StylistCreationDraft[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return seedFromMock()
+    if (!raw) return []
     const parsed = JSON.parse(raw) as unknown
-    if (!Array.isArray(parsed)) return seedFromMock()
+    if (!Array.isArray(parsed)) return []
     const items = parsed
       .map((item) =>
         normalize(item as Partial<StylistCreationDraft> & { image?: string }),
       )
       .filter((item): item is StylistCreationDraft => item != null)
-    return items.length > 0 ? items : seedFromMock()
+      // Uniquement les créations du styliste (pas les anciens seeds mock)
+      .filter((item) => item.id.startsWith('sc-'))
+    return items
   } catch {
-    return seedFromMock()
+    return []
   }
-}
-
-function seedFromMock(): StylistCreationDraft[] {
-  const seeded = MOCK_CREATIONS.filter((c) => c.atelierId === DEMO_ATELIER_ID).map(
-    (c) => ({
-      id: c.id,
-      titre: c.titre,
-      categorie: c.categorie,
-      ville: c.ville,
-      atelier: c.atelier,
-      prixIndicatif: c.prixIndicatif,
-      description: `Création « ${c.titre} » proposée par ${c.atelier}.`,
-      photos: [{ src: c.image, angle: 'face' as const }],
-      images: [c.image],
-      published: true,
-      updatedAt: new Date().toISOString(),
-    }),
-  )
-  persistStylistCreations(seeded)
-  return seeded
 }
 
 function writeAll(items: StylistCreationDraft[]) {
@@ -197,6 +185,7 @@ export function saveStylistCreation(
       photos,
       images: photos.map((photo) => photo.src),
       telephoneWhatsapp: input.telephoneWhatsapp,
+      catalogueId: input.catalogueId,
       published: input.published,
       updatedAt: now,
     }

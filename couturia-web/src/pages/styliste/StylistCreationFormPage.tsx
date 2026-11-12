@@ -15,8 +15,15 @@ import {
   TURN_360_MIN_FRAMES,
 } from '@/components/CreationTurnViewer'
 import { DocumentMeta } from '@/components/DocumentMeta'
-import { MOCK_CATEGORIES } from '@/lib/mock-data'
+import { fetchAtelierByOwner } from '@/lib/api/atelier'
+import {
+  createCreation,
+  ensureCategory,
+  uploadCreationImages,
+} from '@/lib/api/catalogue'
+import { ApiError } from '@/lib/api/http'
 import { useAuthSession } from '@/lib/auth-session'
+import { MOCK_CATEGORIES } from '@/lib/mock-data'
 import {
   getStylistCreation,
   MAX_CREATION_PHOTOS,
@@ -29,7 +36,12 @@ import {
   type StylistPhoto,
 } from '@/lib/stylist-creations'
 
-const categoryOptions = MOCK_CATEGORIES.filter((c) => c.id !== 'tous').map((c) => c.label)
+const categoryChoices = MOCK_CATEGORIES.filter((c) => c.id !== 'tous')
+const categoryOptions = categoryChoices.map((c) => c.label)
+
+function categorySlugFromLabel(label: string): string {
+  return categoryChoices.find((c) => c.label === label)?.id ?? 'robes'
+}
 const SUGGESTED_ANGLES: PhotoAngle[] = ['face', 'cote', 'dos', 'cote', 'detail']
 
 const fieldClass =
@@ -57,7 +69,7 @@ export function StylistCreationFormPage() {
 
   const [titre, setTitre] = useState(existing?.titre ?? '')
   const [categorie, setCategorie] = useState(existing?.categorie ?? categoryOptions[0])
-  const [ville, setVille] = useState(existing?.ville ?? 'Cotonou')
+  const [ville, setVille] = useState(existing?.ville ?? user?.ville ?? 'Cotonou')
   const [prix, setPrix] = useState(
     existing?.prixIndicatif != null ? String(existing.prixIndicatif) : '',
   )
@@ -67,6 +79,7 @@ export function StylistCreationFormPage() {
   const [message, setMessage] = useState<string | null>(null)
   const [imageError, setImageError] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [saving, setSaving] = useState(false)
 
   const images = useMemo(() => photos.map((photo) => photo.src), [photos])
   const is360 = photos.length >= TURN_360_MIN_FRAMES
@@ -168,8 +181,18 @@ export function StylistCreationFormPage() {
     )
   }
 
-  function onSubmit(event: FormEvent) {
+  async function resolveAtelierId(): Promise<string> {
+    if (user?.atelierId) return user.atelierId
+    if (!user?.id) {
+      throw new Error('Session styliste incomplète. Reconnectez-vous.')
+    }
+    const atelier = await fetchAtelierByOwner(user.id)
+    return atelier.id
+  }
+
+  async function onSubmit(event: FormEvent) {
     event.preventDefault()
+    setMessage(null)
     if (photos.length === 0) {
       setImageError('Ajoutez au moins une photo depuis votre téléphone.')
       return
@@ -181,27 +204,73 @@ export function StylistCreationFormPage() {
       return
     }
 
-    const saved = saveStylistCreation({
-      id: existing?.id,
-      titre: titre.trim(),
-      categorie,
-      ville: ville.trim(),
-      atelier: atelierName,
-      prixIndicatif: prixNumber,
-      description: description.trim(),
-      photos,
-      images: photos.map((photo) => photo.src),
-      telephoneWhatsapp: user?.phone?.trim() || existing?.telephoneWhatsapp,
-      published: true,
-    })
-    if (!saved.ok) {
-      setImageError(saved.message)
-      return
+    setSaving(true)
+    setImageError(null)
+    try {
+      let catalogueId = existing?.catalogueId
+      // 1) Upload photos → URLs publiques (visibles par tous)
+      const uploadedUrls = await uploadCreationImages(photos.map((photo) => photo.src))
+      const photosOnServer = photos.map((photo, index) => ({
+        ...photo,
+        src: uploadedUrls[index] || photo.src,
+      }))
+
+      // 2) Nouvelle création → POST catalogue-service
+      if (!catalogueId) {
+        const atelierId = await resolveAtelierId()
+        const category = await ensureCategory({
+          slug: categorySlugFromLabel(categorie),
+          nom: categorie,
+        })
+        const created = await createCreation({
+          atelier_id: atelierId,
+          category_id: category.id,
+          titre: titre.trim(),
+          description: description.trim(),
+          prix_indicatif: prixNumber,
+          ville: ville.trim(),
+          image_url: uploadedUrls[0],
+          images: uploadedUrls,
+          status: 'publiee',
+          is_public: true,
+        })
+        catalogueId = created.id
+      }
+
+      const saved = saveStylistCreation({
+        id: existing?.id,
+        titre: titre.trim(),
+        categorie,
+        ville: ville.trim(),
+        atelier: atelierName,
+        prixIndicatif: prixNumber,
+        description: description.trim(),
+        photos: photosOnServer,
+        images: photosOnServer.map((photo) => photo.src),
+        telephoneWhatsapp: user?.phone?.trim() || existing?.telephoneWhatsapp,
+        catalogueId,
+        published: true,
+      })
+      if (!saved.ok) {
+        setImageError(saved.message)
+        return
+      }
+
+      setMessage('Publié sur le catalogue avec photos.')
+      window.setTimeout(() => {
+        navigate('/espace-styliste/creations')
+      }, 700)
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setImageError(err.message)
+      } else if (err instanceof Error) {
+        setImageError(err.message)
+      } else {
+        setImageError('Publication impossible. Vérifie catalogue (:8003) et atelier (:8002).')
+      }
+    } finally {
+      setSaving(false)
     }
-    setMessage('Enregistré sur cet appareil (démo front).')
-    window.setTimeout(() => {
-      navigate('/espace-styliste/creations')
-    }, 500)
   }
 
   if (id && !existing) {
@@ -528,9 +597,13 @@ export function StylistCreationFormPage() {
             <p className="rounded-xl bg-ribbon px-3 py-2 text-sm text-primary">{message}</p>
           ) : null}
 
-          <button type="submit" className="btn btn-primary h-11 min-h-11 w-full rounded-xl gap-2">
+          <button
+            type="submit"
+            disabled={saving || uploading}
+            className="btn btn-primary h-11 min-h-11 w-full rounded-xl gap-2"
+          >
             <Save className="size-4" aria-hidden />
-            Enregistrer
+            {saving ? 'Publication…' : 'Publier'}
           </button>
         </form>
       </div>
