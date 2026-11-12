@@ -10,6 +10,7 @@ import { HomePage } from '@/pages/HomePage'
 import { LoginPage } from '@/pages/LoginPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 import { RegisterPage } from '@/pages/RegisterPage'
+import { SettingsPage } from '@/pages/SettingsPage'
 import { EspaceStylistePage } from '@/pages/styliste/EspaceStylistePage'
 import { StylistCreationFormPage } from '@/pages/styliste/StylistCreationFormPage'
 import { StylistCreationsPage } from '@/pages/styliste/StylistCreationsPage'
@@ -58,6 +59,7 @@ export function AppRoutes() {
         />
         <Route path="connexion" element={<LoginPage />} />
         <Route path="inscription" element={<RegisterPage />} />
+        <Route path="parametres" element={<SettingsPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

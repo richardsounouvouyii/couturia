@@ -25,6 +25,8 @@ type AuthSessionContextValue = {
   isStylist: boolean
   isClient: boolean
   signIn: (user: AuthUser) => void
+  /** Met à jour le profil local (démo) sans changer le rôle. */
+  updateProfile: (patch: Partial<Omit<AuthUser, 'role'>>) => void
   signOut: () => void
 }
 
@@ -81,6 +83,35 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
     setUser(merged)
   }, [])
 
+  const updateProfile = useCallback((patch: Partial<Omit<AuthUser, 'role'>>) => {
+    setUser((current) => {
+      if (!current) return current
+      return {
+        ...current,
+        fullName:
+          typeof patch.fullName === 'string' && patch.fullName.trim()
+            ? patch.fullName.trim()
+            : current.fullName,
+        email:
+          typeof patch.email === 'string' && patch.email.trim()
+            ? patch.email.trim()
+            : current.email,
+        phone:
+          patch.phone === undefined
+            ? current.phone
+            : patch.phone.trim()
+              ? patch.phone.trim()
+              : undefined,
+        atelierName:
+          patch.atelierName === undefined
+            ? current.atelierName
+            : patch.atelierName.trim()
+              ? patch.atelierName.trim()
+              : undefined,
+      }
+    })
+  }, [])
+
   const signOut = useCallback(() => {
     setUser(null)
   }, [])
@@ -92,9 +123,10 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
       isStylist: user?.role === 'styliste',
       isClient: user?.role === 'client',
       signIn,
+      updateProfile,
       signOut,
     }),
-    [user, signIn, signOut],
+    [user, signIn, updateProfile, signOut],
   )
 
   return (

@@ -12,10 +12,10 @@ export function PublicLayout() {
   return (
     <>
       <CoutureWallpaper />
-      <div className="relative z-[1] flex min-h-screen flex-col bg-transparent text-heading">
+      <div className="relative z-[1] flex min-h-screen flex-col bg-transparent pb-20 text-heading lg:pb-0">
         <ScrollToTop />
         <Navbar />
-        <main className="flex-1 bg-transparent pb-20 lg:pb-0">
+        <main className="flex-1 bg-transparent">
           <Outlet />
         </main>
         <Footer />

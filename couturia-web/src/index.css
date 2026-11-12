@@ -113,3 +113,77 @@ textarea:focus-visible {
     transform: scaleX(0);
   }
 }
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(1.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-out-right {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(1.25rem);
+  }
+}
+
+@keyframes menu-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes menu-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Carrousel hero : l’image sortante se balaye vers la gauche */
+@keyframes hero-wipe-out {
+  from {
+    clip-path: inset(0 0 0 0);
+    transform: translateX(0);
+  }
+  to {
+    clip-path: inset(0 0 0 100%);
+    transform: translateX(-6%);
+  }
+}
+
+@layer utilities {
+  .animate-slide-in-right {
+    animation: slide-in-right 0.22s ease-out both;
+  }
+
+  .animate-slide-out-right {
+    animation: slide-out-right 0.2s ease-in both;
+  }
+
+  .animate-menu-fade-in {
+    animation: menu-fade-in 0.2s ease-out both;
+  }
+
+  .animate-menu-fade-out {
+    animation: menu-fade-out 0.2s ease-in both;
+  }
+
+  .animate-hero-wipe-out {
+    animation: hero-wipe-out 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}

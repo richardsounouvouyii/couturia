@@ -30,6 +30,11 @@ export function LoginPage() {
       fullName: localPart,
       email: email.trim(),
     })
+    const next = searchParams.get('next')
+    if (next?.startsWith('/')) {
+      navigate(next)
+      return
+    }
     navigate(role === 'styliste' ? '/espace-styliste' : '/catalogue')
   }
 
@@ -112,6 +117,15 @@ export function LoginPage() {
             </div>
           </label>
 
+
+          <div className="mt-2 text-right">
+            <Link
+              to="/parametres"
+              className="text-sm font-medium text-primary hover:underline"
+            >
+              Mot de passe oublié ?
+            </Link>
+          </div>
 
           <button type="submit" className="btn btn-primary mt-5 w-full gap-2 rounded-xl">
             <LogIn className="size-4" />

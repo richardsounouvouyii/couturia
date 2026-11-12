@@ -16,10 +16,48 @@ import {
 } from 'lucide-react'
 import { CreationCard } from '@/components/CreationCard'
 import { DocumentMeta } from '@/components/DocumentMeta'
+import { HeroCarousel } from '@/components/HeroCarousel'
 import atelierImage from '@/assets/images/atelier.jpg'
+import heroCarouselAtelier from '@/assets/images/hero-carousel-atelier.jpg'
+import heroCarouselCut from '@/assets/images/hero-carousel-cut.jpg'
+import heroCarouselFinish from '@/assets/images/hero-carousel-finish.jpg'
+import heroCarouselFit from '@/assets/images/hero-carousel-fit.jpg'
+import heroCarouselMannequin from '@/assets/images/hero-carousel-mannequin.jpg'
+import heroCarouselSew from '@/assets/images/hero-carousel-sew.jpg'
 import heroImage from '@/assets/images/hero.jpg'
 import { listPublicCreations } from '@/lib/catalogue'
 import { MOCK_CATEGORIES, MOCK_FEATURES, MOCK_STATS } from '@/lib/mock-data'
+
+const HERO_SLIDES = [
+  {
+    src: heroImage,
+    alt: 'Couturière souriante devant sa machine à coudre Couturia',
+  },
+  {
+    src: heroCarouselSew,
+    alt: 'Couturière africaine en train de coudre un tissu wax',
+  },
+  {
+    src: heroCarouselMannequin,
+    alt: 'Styliste habillant un mannequin avec une robe africaine',
+  },
+  {
+    src: heroCarouselFit,
+    alt: 'Essayage d’une robe wax sur mannequin',
+  },
+  {
+    src: heroCarouselCut,
+    alt: 'Couturier coupant un tissu africain dans l’atelier',
+  },
+  {
+    src: heroCarouselAtelier,
+    alt: 'Atelier de couture : essai sur mannequin et coupe de tissu',
+  },
+  {
+    src: heroCarouselFinish,
+    alt: 'Finitions et repassage d’une création dans l’atelier',
+  },
+]
 
 const MOBILE_QUICK_CATEGORIES = [
   { id: 'robes', label: 'Robes', icon: 'Shirt' },
@@ -80,13 +118,7 @@ export function HomePage() {
               />
             </svg>
 
-            <div className="relative overflow-hidden rounded-[1.5rem] bg-ribbon shadow-[0_20px_50px_-20px_rgba(112,13,57,0.35)] ring-1 ring-line/80 lg:rounded-[1.75rem]">
-              <img
-                src={heroImage}
-                alt="Couturière souriante devant sa machine à coudre Couturia"
-                className="aspect-[16/11] w-full object-cover object-left lg:aspect-auto lg:h-auto lg:object-contain"
-              />
-            </div>
+            <HeroCarousel slides={HERO_SLIDES} />
           </div>
 
           <div className="order-2 z-10 lg:order-1">
