@@ -39,8 +39,10 @@ copy .env.example .env
 ## 2. Infra locale (PostgreSQL + RabbitMQ + auth-service)
 
 ```bash
-docker compose -f docker/docker-compose.yml up --build
+docker compose --env-file .env -f docker/docker-compose.yml up --build
 ```
+
+> Sur Windows, si le port `5432` est déjà pris, utilise `POSTGRES_PORT=5434` dans `.env` (déjà prévu dans `.env.example`).
 
 Vérifications :
 
