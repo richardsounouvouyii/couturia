@@ -88,8 +88,8 @@ export function apiCreationToMock(
 }
 
 /**
- * Source sync (même appareil) :
- * mock + créations styliste locales publiées.
+ * Source sync (même appareil) : créations styliste locales publiées uniquement.
+ * Plus de mocks dans le catalogue public.
  */
 export function listPublicCreations(): MockCreation[] {
   const stylistPublished = listStylistCreations()
@@ -97,13 +97,12 @@ export function listPublicCreations(): MockCreation[] {
     .map(stylistDraftToMock)
 
   const byId = new Map<string, MockCreation>()
-  for (const item of MOCK_CREATIONS) byId.set(item.id, item)
   for (const item of stylistPublished) byId.set(item.id, item)
   return sortCreations(Array.from(byId.values()))
 }
 
 /**
- * Source complète : API catalogue + mocks + photos locales si dispo.
+ * Source complète : API catalogue + photos locales si dispo (pas de mocks démo).
  */
 export async function listPublicCreationsMerged(): Promise<MockCreation[]> {
   const local = listStylistCreations()
@@ -135,7 +134,6 @@ export async function listPublicCreationsMerged(): Promise<MockCreation[]> {
   }
 
   const byId = new Map<string, MockCreation>()
-  for (const item of MOCK_CREATIONS) byId.set(item.id, item)
 
   for (const item of apiItems) {
     const draft = localByCatalogueId.get(item.id)
