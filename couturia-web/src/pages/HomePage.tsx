@@ -44,12 +44,15 @@ const iconMap = {
 export function HomePage() {
   const [activeCategory, setActiveCategory] = useState('tous')
 
-  const { items: publicCreations } = usePublicCreations()
+  const { items: publicCreations, loading: creationsLoading } = usePublicCreations()
   const filteredCreations =
     activeCategory === 'tous'
       ? publicCreations
       : publicCreations.filter(
-          (item) => item.categorie.toLowerCase() === activeCategory,
+          (item) =>
+            item.categorie.toLowerCase() === activeCategory ||
+            item.categorie.toLowerCase() ===
+              MOCK_CATEGORIES.find((c) => c.id === activeCategory)?.label.toLowerCase(),
         )
 
   return (
@@ -223,17 +226,25 @@ export function HomePage() {
           })}
         </div>
 
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 lg:gap-5">
-          {filteredCreations.map((creation) => (
-            <Link
-              key={creation.id}
-              to={`/catalogue/${creation.id}`}
-              className="block transition hover:-translate-y-0.5"
-            >
-              <CreationCard creation={creation} />
-            </Link>
-          ))}
-        </div>
+        {creationsLoading && filteredCreations.length === 0 ? (
+          <p className="py-10 text-center text-sm text-muted">Chargement des créations…</p>
+        ) : filteredCreations.length === 0 ? (
+          <p className="py-10 text-center text-sm text-muted">
+            Aucune création publiée pour le moment.
+          </p>
+        ) : (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 lg:gap-5">
+            {filteredCreations.map((creation) => (
+              <Link
+                key={creation.id}
+                to={`/catalogue/${creation.id}`}
+                className="block transition hover:-translate-y-0.5"
+              >
+                <CreationCard creation={creation} />
+              </Link>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Bannière rejoindre — mobile / tablette */}

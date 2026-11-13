@@ -36,7 +36,7 @@ function categoryIdFromLabel(label: string): string {
 export function CreationsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const initialCategory = categoryIdFromLabel(searchParams.get('categorie') ?? 'tous')
-  const { items: publicCreations } = usePublicCreations()
+  const { items: publicCreations, loading } = usePublicCreations()
 
   const [category, setCategory] = useState(initialCategory)
   const [query, setQuery] = useState(searchParams.get('q') ?? '')
@@ -277,7 +277,9 @@ export function CreationsPage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-5 lg:px-8 lg:py-7">
-        {filtered.length === 0 ? (
+        {loading && filtered.length === 0 ? (
+          <p className="py-16 text-center text-sm text-muted">Chargement des créations…</p>
+        ) : filtered.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-line bg-white px-6 py-16 text-center">
             <p className="font-display text-xl font-semibold text-primary">
               Aucune création trouvée
