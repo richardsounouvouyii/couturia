@@ -3,7 +3,7 @@ app = 'couturia-atelier'
 primary_region = 'ams'
 
 [build]
-  dockerfile = 'couturia-api/atelier-service/Dockerfile.fly'
+  dockerfile = 'Dockerfile.fly'
 
 [http_service]
   internal_port = 8080

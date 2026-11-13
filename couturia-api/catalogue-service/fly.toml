@@ -3,8 +3,8 @@ app = 'couturia-catalogue'
 primary_region = 'ams'
 
 [build]
-  # Context = racine du repo (Launch Fly / --config)
-  dockerfile = 'couturia-api/catalogue-service/Dockerfile.fly'
+  # Relatif au dossier du fly.toml ; le contexte de build reste la racine du repo
+  dockerfile = 'Dockerfile.fly'
 
 [http_service]
   internal_port = 8080

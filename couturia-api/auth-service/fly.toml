@@ -7,7 +7,7 @@ app = 'couturia'
 primary_region = 'ams'
 
 [build]
-  dockerfile = 'couturia-api/auth-service/Dockerfile.fly'
+  dockerfile = 'Dockerfile.fly'
 
 [http_service]
   internal_port = 8080
