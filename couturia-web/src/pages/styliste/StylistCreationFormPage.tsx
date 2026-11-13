@@ -76,7 +76,7 @@ export function StylistCreationFormPage() {
     user?.fullName?.trim() ||
     STYLIST_DEMO.atelierName
 
-  const [categoryOptions, setCategoryOptions] = useState(
+  const [categoryOptions, setCategoryOptions] = useState<string[]>(
     FALLBACK_CATEGORIES.map((c) => c.nom),
   )
   const [categorySlugByLabel, setCategorySlugByLabel] = useState<Record<string, string>>(
