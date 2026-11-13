@@ -27,11 +27,13 @@ export function RegisterPage() {
   const [loading, setLoading] = useState(false)
 
   function setRole(next: PublicAuthRole) {
+    if (loading) return
     setSearchParams(next === 'client' ? {} : { role: next }, { replace: true })
   }
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
+    if (loading) return
     setError(null)
     setLoading(true)
     try {
@@ -112,7 +114,7 @@ export function RegisterPage() {
         </h1>
 
         <div className="mt-3">
-          <AuthRoleToggle value={role} onChange={setRole} />
+          <AuthRoleToggle value={role} onChange={setRole} disabled={loading} />
         </div>
 
         <form

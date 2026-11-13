@@ -22,13 +22,17 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false)
 
   function setRole(next: PublicAuthRole) {
+    if (loading) return
     setSearchParams(next === 'client' ? {} : { role: next }, { replace: true })
   }
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
+    if (loading) return
     setError(null)
     setLoading(true)
+    // Figé au clic : on ignore un éventuel changement de rôle pendant l’appel.
+    const selectedRole = role
     try {
       const result = await loginUser({
         email: email.trim(),
@@ -38,7 +42,7 @@ export function LoginPage() {
       const user = await enrichAuthWithAtelier(toAuthUser(result.user))
 
       // Styliste choisi à l’écran mais compte non styliste → refus sans divulguer le rôle
-      if (role === 'styliste' && user.role !== 'styliste') {
+      if (selectedRole === 'styliste' && user.role !== 'styliste') {
         signOut()
         setError('Identifiants incorrects.')
         return
@@ -87,13 +91,14 @@ export function LoginPage() {
         </h1>
 
         <div className="mt-3">
-          <AuthRoleToggle value={role} onChange={setRole} />
+          <AuthRoleToggle value={role} onChange={setRole} disabled={loading} />
           {sessionUser ? (
             <p className="mt-2 rounded-xl bg-ribbon/80 px-3 py-2 text-center text-xs text-heading">
               Déjà connecté ·{' '}
               <button
                 type="button"
                 className="font-semibold text-primary underline"
+                disabled={loading}
                 onClick={() => signOut()}
               >
                 Déconnexion
@@ -113,6 +118,7 @@ export function LoginPage() {
               required
               autoComplete="email"
               value={email}
+              disabled={loading}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="vous@exemple.com"
               className={fieldClass}
@@ -128,13 +134,15 @@ export function LoginPage() {
                 minLength={8}
                 autoComplete="current-password"
                 value={password}
+                disabled={loading}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 className={`${fieldClass} pr-11`}
               />
               <button
                 type="button"
-                className="absolute top-1/2 right-3 -translate-y-1/2 text-muted"
+                className="absolute top-1/2 right-3 -translate-y-1/2 text-muted disabled:opacity-50"
+                disabled={loading}
                 onClick={() => setShowPassword((v) => !v)}
                 aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
               >
