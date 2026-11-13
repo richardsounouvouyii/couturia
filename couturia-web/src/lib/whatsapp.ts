@@ -25,8 +25,34 @@ export function buildWhatsAppUrl(phone: string, message: string) {
   return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`
 }
 
-export function creationWhatsAppMessage(titre: string, pageUrl: string) {
-  return `Bonjour, je suis intéressé(e) par « ${titre} » vue sur Couturia.\n${pageUrl}`
+type CreationWhatsAppExtras = {
+  atelier?: string
+  ville?: string
+  prixIndicatif?: number | null
+}
+
+export function creationWhatsAppMessage(
+  titre: string,
+  pageUrl: string,
+  extras?: CreationWhatsAppExtras,
+) {
+  const lines = [
+    `Bonjour, je suis intéressé(e) par « ${titre} » vue sur Couturia.`,
+  ]
+  if (extras?.atelier?.trim()) {
+    lines.push(`Atelier : ${extras.atelier.trim()}`)
+  }
+  if (extras?.ville?.trim()) {
+    lines.push(`Ville : ${extras.ville.trim()}`)
+  }
+  if (extras?.prixIndicatif != null && Number.isFinite(extras.prixIndicatif)) {
+    const formatted = new Intl.NumberFormat('fr-FR', {
+      maximumFractionDigits: 0,
+    }).format(extras.prixIndicatif)
+    lines.push(`Prix indicatif : ${formatted} F`)
+  }
+  lines.push(pageUrl)
+  return lines.join('\n')
 }
 
 export function atelierWhatsAppMessage(nom: string, pageUrl: string) {

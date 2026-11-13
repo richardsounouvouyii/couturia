@@ -28,6 +28,11 @@ export function CreationCard({ creation, hideAtelier = false }: Props) {
         creationWhatsAppMessage(
           creation.titre,
           absoluteUrl(`/catalogue/${creation.id}`),
+          {
+            atelier: creation.atelier,
+            ville: creation.ville,
+            prixIndicatif: creation.prixIndicatif,
+          },
         ),
       )
     : null

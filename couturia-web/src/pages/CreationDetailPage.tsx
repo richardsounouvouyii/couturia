@@ -66,7 +66,11 @@ export function CreationDetailPage() {
   }
 
   const pageUrl = absoluteUrl(`/catalogue/${creation.id}`)
-  const message = creationWhatsAppMessage(creation.titre, pageUrl)
+  const message = creationWhatsAppMessage(creation.titre, pageUrl, {
+    atelier: creation.atelier,
+    ville: creation.ville,
+    prixIndicatif: creation.prixIndicatif,
+  })
   const shareTitle = creation.titre
 
   async function onNativeShare() {
