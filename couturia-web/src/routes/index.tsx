@@ -4,8 +4,11 @@ import { RequireStylist } from '@/components/RequireStylist'
 import { AdminLayout } from '@/layouts/AdminLayout'
 import { PublicLayout } from '@/layouts/PublicLayout'
 import { AdminCarouselPage } from '@/pages/admin/AdminCarouselPage'
+import { AdminClientsPage } from '@/pages/admin/AdminClientsPage'
 import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage'
 import { AdminPlaceholderPage } from '@/pages/admin/AdminPlaceholderPage'
+import { AdminStylistesPage } from '@/pages/admin/AdminStylistesPage'
+import { AdminUtilisateursPage } from '@/pages/admin/AdminUtilisateursPage'
 import { AtelierDetailPage } from '@/pages/AtelierDetailPage'
 import { AteliersPage } from '@/pages/AteliersPage'
 import { CreationDetailPage } from '@/pages/CreationDetailPage'
@@ -32,15 +35,9 @@ export function AppRoutes() {
       >
         <Route index element={<AdminDashboardPage />} />
         <Route path="publicites" element={<AdminCarouselPage />} />
-        <Route
-          path="utilisateurs"
-          element={<AdminPlaceholderPage title="Utilisateurs" />}
-        />
-        <Route
-          path="stylistes"
-          element={<AdminPlaceholderPage title="Couturières & Stylistes" />}
-        />
-        <Route path="clients" element={<AdminPlaceholderPage title="Clients" />} />
+        <Route path="utilisateurs" element={<AdminUtilisateursPage />} />
+        <Route path="stylistes" element={<AdminStylistesPage />} />
+        <Route path="clients" element={<AdminClientsPage />} />
         <Route
           path="creations"
           element={<AdminPlaceholderPage title="Créations" />}

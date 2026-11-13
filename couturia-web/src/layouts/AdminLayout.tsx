@@ -1,17 +1,13 @@
 import { useState } from 'react'
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
-import {
-  Bell,
-  LogOut,
-  Menu,
-  Plus,
-  Search,
-  X,
-} from 'lucide-react'
+import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { Bell, LogOut, Menu, Search, X } from 'lucide-react'
 import { DocumentMeta } from '@/components/DocumentMeta'
 import { useAuthSession } from '@/lib/auth-session'
 import { ADMIN_NAV } from '@/lib/admin-nav'
 import logo from '@/assets/images/logo.png'
+
+const SIDEBAR_W = 'w-[200px]'
+const SIDEBAR_PL = 'lg:pl-[200px]'
 
 export function AdminLayout() {
   const { user, isStaff, signOut } = useAuthSession()
@@ -28,7 +24,7 @@ export function AdminLayout() {
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
     [
-      'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition',
+      'flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12px] font-medium transition',
       isActive
         ? 'bg-white/15 text-white shadow-sm'
         : 'text-white/75 hover:bg-white/10 hover:text-white',
@@ -36,15 +32,18 @@ export function AdminLayout() {
 
   const sidebar = (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2.5 border-b border-white/10 px-4 py-4">
-        <img src={logo} alt="" className="size-9 rounded-lg bg-white object-contain p-0.5" />
+      <div className="flex items-center gap-2 border-b border-white/10 px-3 py-3">
+        <img src={logo} alt="" className="size-7 rounded-md bg-white object-contain p-0.5" />
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-white">Couturia</p>
-          <p className="truncate text-[11px] text-white/65">Administration</p>
+          <p className="truncate text-xs font-semibold text-white">Couturia</p>
+          <p className="truncate text-[10px] text-white/65">Admin</p>
         </div>
       </div>
 
-      <nav className="flex-1 space-y-0.5 overflow-y-auto px-2 py-3" aria-label="Navigation admin">
+      <nav
+        className="flex-1 space-y-0.5 overflow-y-auto px-1.5 py-2"
+        aria-label="Navigation admin"
+      >
         {ADMIN_NAV.map((item) => {
           const Icon = item.icon
           return (
@@ -55,20 +54,20 @@ export function AdminLayout() {
               className={navLinkClass}
               onClick={() => setMobileOpen(false)}
             >
-              <Icon className="size-4 shrink-0 opacity-90" aria-hidden />
+              <Icon className="size-3.5 shrink-0 opacity-90" aria-hidden />
               <span className="truncate">{item.label}</span>
             </NavLink>
           )
         })}
       </nav>
 
-      <div className="border-t border-white/10 p-3">
+      <div className="border-t border-white/10 p-2">
         <button
           type="button"
           onClick={onLogout}
-          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/80 transition hover:bg-white/10 hover:text-white"
+          className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-[12px] font-medium text-white/80 transition hover:bg-white/10 hover:text-white"
         >
-          <LogOut className="size-4" aria-hidden />
+          <LogOut className="size-3.5" aria-hidden />
           Déconnexion
         </button>
       </div>
@@ -80,13 +79,11 @@ export function AdminLayout() {
       <DocumentMeta title="Administration" path="/admin" noIndex />
 
       {previewMode ? (
-        <div className="bg-amber-100 px-4 py-2 text-center text-xs font-medium text-amber-950">
-          Aperçu front admin (dev) — l’API staff arrivera ensuite. En prod, réservé aux comptes
-          admin.
+        <div className="bg-amber-100 px-3 py-1.5 text-center text-[11px] font-medium text-amber-950">
+          Aperçu front admin (dev) — API staff ensuite. En prod : comptes admin uniquement.
         </div>
       ) : null}
 
-      {/* Mobile overlay */}
       {mobileOpen ? (
         <button
           type="button"
@@ -98,64 +95,57 @@ export function AdminLayout() {
 
       <aside
         className={[
-          'fixed inset-y-0 left-0 z-50 w-[260px] bg-primary-dark transition-transform lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-50 bg-primary-dark transition-transform lg:translate-x-0',
+          SIDEBAR_W,
           mobileOpen ? 'translate-x-0' : '-translate-x-full',
         ].join(' ')}
       >
         {sidebar}
       </aside>
 
-      <div className="lg:pl-[260px]">
+      <div className={SIDEBAR_PL}>
         <header className="sticky top-0 z-30 border-b border-line/80 bg-[#f6f1ee]/95 backdrop-blur">
-          <div className="flex items-center gap-3 px-4 py-3 lg:px-6">
+          <div className="flex items-center gap-2 px-3 py-2 lg:px-4">
             <button
               type="button"
-              className="grid size-10 place-items-center rounded-xl border border-line bg-white text-primary lg:hidden"
+              className="grid size-8 place-items-center rounded-lg border border-line bg-white text-primary lg:hidden"
               aria-label="Ouvrir le menu"
               onClick={() => setMobileOpen(true)}
             >
-              {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+              {mobileOpen ? <X className="size-4" /> : <Menu className="size-4" />}
             </button>
 
             <label className="relative min-w-0 flex-1">
               <span className="sr-only">Rechercher</span>
-              <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted" />
+              <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted" />
               <input
                 type="search"
                 placeholder="Rechercher…"
-                className="h-10 w-full rounded-xl border border-line bg-white py-2 pr-3 pl-10 text-sm text-heading outline-none placeholder:text-muted focus:border-primary focus-visible:ring-2 focus-visible:ring-primary/25"
+                className="h-8 w-full rounded-lg border border-line bg-white py-1.5 pr-3 pl-8 text-xs text-heading outline-none placeholder:text-muted focus:border-primary focus-visible:ring-2 focus-visible:ring-primary/25"
               />
             </label>
 
-            <Link
-              to="/admin/creations"
-              className="btn btn-primary hidden h-10 min-h-10 gap-1.5 rounded-xl px-3 text-sm sm:inline-flex"
-            >
-              <Plus className="size-4" aria-hidden />
-              Nouvelle création
-            </Link>
-
             <button
               type="button"
-              className="relative grid size-10 place-items-center rounded-xl border border-line bg-white text-heading"
+              className="relative grid size-8 place-items-center rounded-lg border border-line bg-white text-heading"
               aria-label="Notifications"
             >
-              <Bell className="size-4" aria-hidden />
-              <span className="absolute top-2 right-2 size-2 rounded-full bg-primary" />
+              <Bell className="size-3.5" aria-hidden />
+              <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-primary" />
             </button>
 
-            <div className="hidden items-center gap-2 rounded-xl border border-line bg-white px-2.5 py-1.5 sm:flex">
-              <span className="grid size-8 place-items-center rounded-full bg-ribbon text-xs font-semibold text-primary">
+            <div className="hidden items-center gap-2 rounded-lg border border-line bg-white px-2 py-1 sm:flex">
+              <span className="grid size-7 place-items-center rounded-full bg-ribbon text-[11px] font-semibold text-primary">
                 {displayName.slice(0, 1).toUpperCase()}
               </span>
-              <span className="max-w-[120px] truncate text-xs font-semibold text-heading">
+              <span className="max-w-[100px] truncate text-[11px] font-semibold text-heading">
                 {displayName}
               </span>
             </div>
           </div>
         </header>
 
-        <main className="px-4 py-5 lg:px-6 lg:py-6">
+        <main className="px-3 py-4 lg:px-5 lg:py-5">
           <Outlet />
         </main>
       </div>

@@ -21,6 +21,10 @@ class Settings(BaseSettings):
     auth_jwt_expire_minutes: int = 60
     rabbitmq_url: str = "amqp://couturia:couturia_dev@localhost:5672/"
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+    # Seed admin en développement (désactivé si e-mail vide)
+    auth_seed_admin_email: str = "admin@couturia.com"
+    auth_seed_admin_password: str = "admincouturia1"
+    auth_seed_admin_name: str = "Admin Couturia"
 
     @property
     def cors_origin_list(self) -> list[str]:

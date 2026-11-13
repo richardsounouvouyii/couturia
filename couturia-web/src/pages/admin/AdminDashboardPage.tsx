@@ -1,18 +1,24 @@
 import { Link } from 'react-router-dom'
-import { ArrowRight, Megaphone, Scissors, Shirt, Users } from 'lucide-react'
+import { ArrowRight, Megaphone, Scissors, Shirt, UserRound } from 'lucide-react'
 import { ADMIN_ACTIVITY, ADMIN_KPIS } from '@/lib/admin-mock'
 
 const shortcuts = [
   {
     to: '/admin/publicites',
-    label: 'Publicités & Carousel',
-    description: 'Gérer les slides de l’accueil',
+    label: 'Publicités',
+    description: 'Slides de l’accueil',
     icon: Megaphone,
+  },
+  {
+    to: '/admin/clients',
+    label: 'Clients',
+    description: 'Comptes et activité',
+    icon: UserRound,
   },
   {
     to: '/admin/stylistes',
     label: 'Stylistes',
-    description: 'Modérer les ateliers (bientôt)',
+    description: 'Ateliers et vitrines',
     icon: Scissors,
   },
   {
@@ -21,39 +27,31 @@ const shortcuts = [
     description: 'Modérer le catalogue (bientôt)',
     icon: Shirt,
   },
-  {
-    to: '/admin/utilisateurs',
-    label: 'Utilisateurs',
-    description: 'Comptes plateforme (bientôt)',
-    icon: Users,
-  },
 ]
 
 export function AdminDashboardPage() {
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div>
-        <h1 className="font-display text-2xl font-semibold text-primary">
-          Tableau de bord
-        </h1>
-        <p className="mt-1 text-sm text-muted">
-          Vue d’ensemble Couturia — chiffres mock pour le front.
+        <h1 className="text-lg font-semibold text-primary sm:text-xl">Accueil admin</h1>
+        <p className="mt-0.5 text-xs text-muted">
+          Vue d’ensemble — chiffres mock pour le front.
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {ADMIN_KPIS.map((kpi) => (
           <article
             key={kpi.id}
-            className="rounded-2xl border border-line bg-white p-3.5 shadow-sm"
+            className="rounded-xl border border-line bg-white px-2.5 py-2 shadow-sm"
           >
-            <p className="text-[11px] font-medium text-muted">{kpi.label}</p>
-            <p className="mt-1.5 text-xl font-semibold tabular-nums text-heading">
+            <p className="truncate text-[10px] font-medium text-muted">{kpi.label}</p>
+            <p className="mt-0.5 text-base font-semibold tabular-nums text-heading">
               {kpi.value}
             </p>
             <p
               className={[
-                'mt-1 text-[11px] font-semibold',
+                'mt-0.5 text-[10px] font-semibold',
                 kpi.positive ? 'text-emerald-700' : 'text-rose-700',
               ].join(' ')}
             >
@@ -95,16 +93,21 @@ export function AdminDashboardPage() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-line bg-white p-4 shadow-sm">
-          <h2 className="text-sm font-semibold text-heading">Activité récente</h2>
-          <ul className="mt-3 space-y-3">
+        <section className="rounded-xl border border-line bg-white shadow-sm">
+          <div className="border-b border-line px-3 py-2.5">
+            <h2 className="text-xs font-semibold text-heading">Activité récente</h2>
+          </div>
+          <ul className="divide-y divide-line/80">
             {ADMIN_ACTIVITY.map((item) => (
-              <li
-                key={item.id}
-                className="border-b border-line/70 pb-3 last:border-0 last:pb-0"
-              >
-                <p className="text-sm text-heading">{item.message}</p>
-                <p className="mt-0.5 text-[11px] text-muted">{item.when}</p>
+              <li key={item.id} className="flex items-start justify-between gap-3 px-3 py-2.5">
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-semibold text-heading">{item.title}</p>
+                  <p className="truncate text-[11px] text-muted">« {item.detail} »</p>
+                  <p className="mt-0.5 text-[10px] text-muted">Par {item.actor}</p>
+                </div>
+                <time className="shrink-0 text-[10px] tabular-nums text-muted">
+                  {item.when}
+                </time>
               </li>
             ))}
           </ul>

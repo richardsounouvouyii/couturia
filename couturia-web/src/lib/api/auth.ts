@@ -111,3 +111,46 @@ export function fetchMe(token: string): Promise<ApiUser> {
     token,
   })
 }
+
+export type UserListResponse = {
+  items: ApiUser[]
+  total: number
+}
+
+/** GET /api/auth/users — réservé staff (JWT admin / super_admin). */
+export function listUsers(
+  token: string,
+  filters?: {
+    role?: ApiUserRole
+    q?: string
+    is_active?: boolean
+    limit?: number
+  },
+): Promise<UserListResponse> {
+  const params = new URLSearchParams()
+  if (filters?.role) params.set('role', filters.role)
+  if (filters?.q?.trim()) params.set('q', filters.q.trim())
+  if (typeof filters?.is_active === 'boolean') {
+    params.set('is_active', String(filters.is_active))
+  }
+  if (filters?.limit) params.set('limit', String(filters.limit))
+  const qs = params.toString()
+  return apiRequest<UserListResponse>(
+    requireAuthBaseUrl(),
+    `/api/auth/users${qs ? `?${qs}` : ''}`,
+    { token },
+  )
+}
+
+/** PATCH /api/auth/users/:id — activer / suspendre / changer rôle (staff). */
+export function updateUser(
+  token: string,
+  userId: string,
+  patch: { is_active?: boolean; role?: ApiUserRole },
+): Promise<ApiUser> {
+  return apiRequest<ApiUser>(
+    requireAuthBaseUrl(),
+    `/api/auth/users/${userId}`,
+    { method: 'PATCH', token, body: patch },
+  )
+}

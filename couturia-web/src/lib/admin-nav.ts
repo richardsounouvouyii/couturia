@@ -3,8 +3,6 @@ import {
   Bell,
   ClipboardList,
   FolderTree,
-  Home,
-  Image,
   LayoutDashboard,
   LayoutTemplate,
   Megaphone,
@@ -26,24 +24,22 @@ export type AdminNavItem = {
 }
 
 export const ADMIN_NAV: AdminNavItem[] = [
-  { to: '/admin', label: 'Tableau de bord', icon: LayoutDashboard, ready: true },
-  { to: '/admin/utilisateurs', label: 'Utilisateurs', icon: Users },
-  { to: '/admin/stylistes', label: 'Couturières & Stylistes', icon: Scissors },
-  { to: '/admin/clients', label: 'Clients', icon: UserRound },
+  { to: '/admin', label: 'Accueil', icon: LayoutDashboard, ready: true },
+  { to: '/admin/utilisateurs', label: 'Utilisateurs', icon: Users, ready: true },
+  { to: '/admin/stylistes', label: 'Stylistes', icon: Scissors, ready: true },
+  { to: '/admin/clients', label: 'Clients', icon: UserRound, ready: true },
   { to: '/admin/creations', label: 'Créations', icon: Shirt },
   { to: '/admin/categories', label: 'Catégories', icon: FolderTree },
   { to: '/admin/commandes', label: 'Commandes', icon: ShoppingBag },
   { to: '/admin/demandes', label: 'Demandes', icon: ClipboardList },
-  { to: '/admin/avis', label: 'Avis & Signalements', icon: MessageSquareWarning },
+  { to: '/admin/avis', label: 'Avis', icon: MessageSquareWarning },
   {
     to: '/admin/publicites',
-    label: 'Publicités & Carousel',
+    label: 'Publicités',
     icon: Megaphone,
     ready: true,
   },
-  { to: '/admin/pages-accueil', label: "Pages d'accueil", icon: LayoutTemplate },
-  { to: '/admin/messages', label: 'Messages / Notifications', icon: Bell },
-  { to: '/admin/parametres', label: 'Paramètres', icon: Settings },
+  { to: '/admin/pages-accueil', label: 'Pages', icon: LayoutTemplate },
+  { to: '/admin/messages', label: 'Messages', icon: Bell },
+  { to: '/admin/parametres', label: 'Réglages', icon: Settings },
 ]
-
-export const ADMIN_HOME_ICON = Home
