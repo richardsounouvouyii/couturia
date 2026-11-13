@@ -1,14 +1,11 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { BadgeCheck, Search, Sparkles, X } from 'lucide-react'
 import { AtelierCard } from '@/components/AtelierCard'
 import { DocumentMeta } from '@/components/DocumentMeta'
-import { ATELIER_VILLES, MOCK_ATELIERS } from '@/lib/mock-data'
-
-const SPECIALITES = [
-  'Toutes',
-  ...Array.from(new Set(MOCK_ATELIERS.map((a) => a.specialite))),
-]
+import { atelierPublicToCard, listAteliers } from '@/lib/api/atelier'
+import { listPublicCreationsMerged } from '@/lib/catalogue'
+import { ATELIER_VILLES, type MockAtelier } from '@/lib/mock-data'
 
 type SortKey = 'note' | 'creations' | 'nom'
 
@@ -21,9 +18,57 @@ export function AteliersPage() {
   const [sort, setSort] = useState<SortKey>(
     (searchParams.get('tri') as SortKey) || 'note',
   )
+  const [ateliers, setAteliers] = useState<MockAtelier[]>([])
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    setLoadError(null)
+    void (async () => {
+      try {
+        const [apiAteliers, creations] = await Promise.all([
+          listAteliers(),
+          listPublicCreationsMerged(),
+        ])
+        if (cancelled) return
+        const mapped = apiAteliers.map((atelier) => {
+          const atelierCreations = creations.filter((c) => c.atelierId === atelier.id)
+          return atelierPublicToCard(atelier, {
+            creationsCount: atelierCreations.length,
+            coverImage: atelierCreations[0]?.image,
+          })
+        })
+        setAteliers(mapped)
+      } catch {
+        if (!cancelled) {
+          setAteliers([])
+          setLoadError('Impossible de charger les stylistes pour le moment.')
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const specialites = useMemo(
+    () => ['Toutes', ...Array.from(new Set(ateliers.map((a) => a.specialite))).sort((a, b) => a.localeCompare(b, 'fr'))],
+    [ateliers],
+  )
+
+  const villes = useMemo(() => {
+    const fromData = ateliers.map((a) => a.ville).filter(Boolean)
+    return Array.from(new Set([...ATELIER_VILLES, ...fromData])).sort((a, b) =>
+      a.localeCompare(b, 'fr'),
+    )
+  }, [ateliers])
 
   const filtered = useMemo(() => {
-    let items = [...MOCK_ATELIERS]
+    let items = [...ateliers]
 
     if (ville !== 'Toutes') items = items.filter((item) => item.ville === ville)
     if (specialite !== 'Toutes') {
@@ -50,12 +95,15 @@ export function AteliersPage() {
           return a.nom.localeCompare(b.nom, 'fr')
         case 'note':
         default:
-          return b.note - a.note || b.avis - a.avis
+          if (b.creationsCount !== a.creationsCount) {
+            return b.creationsCount - a.creationsCount
+          }
+          return a.nom.localeCompare(b.nom, 'fr')
       }
     })
 
     return items
-  }, [query, ville, specialite, verifiesOnly, sort])
+  }, [ateliers, query, ville, specialite, verifiesOnly, sort])
 
   const hasFilters =
     query.trim() !== '' ||
@@ -153,7 +201,7 @@ export function AteliersPage() {
         <div className="border-t border-line/70 bg-surface">
           <div className="mx-auto max-w-7xl px-4 py-3 lg:px-8">
             <div className="flex gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {SPECIALITES.map((item) => {
+              {specialites.map((item) => {
                 const active = specialite === item
                 return (
                   <button
@@ -178,7 +226,7 @@ export function AteliersPage() {
 
             <div className="mt-2.5 flex items-center gap-2">
               <div className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {['Toutes', ...ATELIER_VILLES].map((v) => {
+                {['Toutes', ...villes].map((v) => {
                   const active = ville === v
                   return (
                     <button
@@ -230,7 +278,7 @@ export function AteliersPage() {
                   syncParams({ tri })
                 }}
               >
-                <option value="note">Notes</option>
+                <option value="note">Populaires</option>
                 <option value="creations">Créations</option>
                 <option value="nom">A → Z</option>
               </select>
@@ -251,7 +299,16 @@ export function AteliersPage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-5 lg:px-8 lg:py-7">
-        {filtered.length === 0 ? (
+        {loading ? (
+          <p className="py-16 text-center text-sm text-muted">Chargement des stylistes…</p>
+        ) : loadError ? (
+          <div className="rounded-2xl border border-dashed border-line bg-white px-6 py-16 text-center">
+            <p className="font-display text-xl font-semibold text-primary">{loadError}</p>
+            <p className="mt-2 text-sm text-muted">
+              Le serveur atelier peut être en train de démarrer. Réessaie dans un instant.
+            </p>
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-line bg-white px-6 py-16 text-center">
             <Sparkles className="mx-auto size-8 text-gold" aria-hidden />
             <p className="font-display mt-3 text-xl font-semibold text-primary">

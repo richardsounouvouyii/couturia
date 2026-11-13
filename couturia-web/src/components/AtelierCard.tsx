@@ -76,11 +76,17 @@ export function AtelierCard({ atelier }: Props) {
         </p>
 
         <div className="mt-auto flex items-center justify-between gap-2 border-t border-line/80 pt-3">
-          <span className="inline-flex items-center gap-1 text-sm text-heading/85">
-            <Star className="size-3.5 fill-gold text-gold" aria-hidden />
-            {atelier.note.toFixed(1).replace('.', ',')}
-            <span className="text-muted">({atelier.avis})</span>
-          </span>
+          {atelier.avis > 0 ? (
+            <span className="inline-flex items-center gap-1 text-sm text-heading/85">
+              <Star className="size-3.5 fill-gold text-gold" aria-hidden />
+              {atelier.note.toFixed(1).replace('.', ',')}
+              <span className="text-muted">({atelier.avis})</span>
+            </span>
+          ) : (
+            <span className="rounded-full bg-ribbon px-2 py-0.5 text-[10px] font-semibold text-primary">
+              Nouveau
+            </span>
+          )}
           <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary">
             Voir le profil
             <ArrowRight className="size-3.5 transition group-hover:translate-x-0.5" />

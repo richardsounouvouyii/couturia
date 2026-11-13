@@ -19,7 +19,7 @@ import { DocumentMeta } from '@/components/DocumentMeta'
 import { FavoriteButton } from '@/components/FavoriteButton'
 import { WhatsAppButton } from '@/components/WhatsAppButton'
 import { formatFcfa, formatPhoneDisplay } from '@/lib/format'
-import { getAtelierById, getCreationImages, getCreationPhotoLabels } from '@/lib/mock-data'
+import { getCreationImages, getCreationPhotoLabels } from '@/lib/mock-data'
 import { facebookShareUrl, nativeShare, whatsappShareUrl } from '@/lib/share'
 import { usePublicCreation } from '@/lib/use-public-creations'
 import { absoluteUrl, creationWhatsAppMessage } from '@/lib/whatsapp'
@@ -27,10 +27,9 @@ import { absoluteUrl, creationWhatsAppMessage } from '@/lib/whatsapp'
 export function CreationDetailPage() {
   const { id } = useParams()
   const { creation, loading } = usePublicCreation(id)
-  const atelier = creation ? getAtelierById(creation.atelierId) : undefined
   const images = creation ? getCreationImages(creation) : []
   const photoLabels = creation ? getCreationPhotoLabels(creation) : []
-  const contactPhone = creation?.telephoneWhatsapp || atelier?.telephoneWhatsapp
+  const contactPhone = creation?.telephoneWhatsapp?.trim() || undefined
   const [activeIndex, setActiveIndex] = useState(0)
   const [galleryOpen, setGalleryOpen] = useState(false)
 

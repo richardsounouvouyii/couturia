@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Search, Store, X } from 'lucide-react'
-import { listPublicCreations } from '@/lib/catalogue'
-import { MOCK_ATELIERS } from '@/lib/mock-data'
+import { atelierPublicToCard, listAteliers } from '@/lib/api/atelier'
+import { listPublicCreationsMerged } from '@/lib/catalogue'
+import type { MockAtelier, MockCreation } from '@/lib/mock-data'
 
 type Props = {
   open: boolean
@@ -11,6 +12,8 @@ type Props = {
 
 export function SearchOverlay({ open, onClose }: Props) {
   const [query, setQuery] = useState('')
+  const [creations, setCreations] = useState<MockCreation[]>([])
+  const [ateliers, setAteliers] = useState<MockAtelier[]>([])
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -29,13 +32,36 @@ export function SearchOverlay({ open, onClose }: Props) {
     }
   }, [open, onClose])
 
+  useEffect(() => {
+    if (!open) return
+    let cancelled = false
+    void (async () => {
+      try {
+        const [apiCreations, apiAteliers] = await Promise.all([
+          listPublicCreationsMerged(),
+          listAteliers(),
+        ])
+        if (cancelled) return
+        setCreations(apiCreations)
+        setAteliers(apiAteliers.map((atelier) => atelierPublicToCard(atelier)))
+      } catch {
+        if (!cancelled) {
+          setCreations([])
+          setAteliers([])
+        }
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [open])
+
   const results = useMemo(() => {
-    const creations = listPublicCreations()
     const q = query.trim().toLowerCase()
     if (!q) {
       return {
         creations: creations.slice(0, 4),
-        ateliers: MOCK_ATELIERS.slice(0, 3),
+        ateliers: ateliers.slice(0, 3),
       }
     }
 
@@ -49,15 +75,17 @@ export function SearchOverlay({ open, onClose }: Props) {
             item.categorie.toLowerCase().includes(q),
         )
         .slice(0, 6),
-      ateliers: MOCK_ATELIERS.filter(
-        (item) =>
-          item.nom.toLowerCase().includes(q) ||
-          item.specialite.toLowerCase().includes(q) ||
-          item.ville.toLowerCase().includes(q) ||
-          item.quartier.toLowerCase().includes(q),
-      ).slice(0, 4),
+      ateliers: ateliers
+        .filter(
+          (item) =>
+            item.nom.toLowerCase().includes(q) ||
+            item.specialite.toLowerCase().includes(q) ||
+            item.ville.toLowerCase().includes(q) ||
+            item.quartier.toLowerCase().includes(q),
+        )
+        .slice(0, 4),
     }
-  }, [query])
+  }, [query, creations, ateliers])
 
   if (!open) return null
 

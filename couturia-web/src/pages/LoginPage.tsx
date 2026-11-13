@@ -49,9 +49,13 @@ export function LoginPage() {
       navigate(user.role === 'styliste' ? '/espace-styliste' : '/catalogue')
     } catch (err) {
       if (err instanceof ApiError) {
-        setError(err.message)
+        setError(
+          err.status === 408
+            ? 'Le serveur met trop de temps à répondre. Réessaie dans un instant.'
+            : err.message,
+        )
       } else {
-        setError('Impossible de joindre le serveur auth. Vérifie que :8001 tourne.')
+        setError('Impossible de joindre le serveur. Réessaie dans un instant.')
       }
     } finally {
       setLoading(false)

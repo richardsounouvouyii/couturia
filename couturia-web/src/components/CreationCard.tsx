@@ -2,7 +2,7 @@ import { House, MapPin, MessageCircle, RotateCw, Star } from 'lucide-react'
 import { FavoriteButton } from '@/components/FavoriteButton'
 import { TURN_360_MIN_FRAMES } from '@/components/CreationTurnViewer'
 import type { MockCreation } from '@/lib/mock-data'
-import { getAtelierById, getCreationImages } from '@/lib/mock-data'
+import { getCreationImages } from '@/lib/mock-data'
 import { formatFcfa } from '@/lib/format'
 import {
   absoluteUrl,
@@ -18,8 +18,7 @@ type Props = {
 }
 
 export function CreationCard({ creation, hideAtelier = false }: Props) {
-  const atelier = getAtelierById(creation.atelierId)
-  const phone = creation.telephoneWhatsapp || atelier?.telephoneWhatsapp || ''
+  const phone = creation.telephoneWhatsapp?.trim() || ''
   const is360 = getCreationImages(creation).length >= TURN_360_MIN_FRAMES
   const canWhatsApp = isWhatsAppAvailable(phone)
   const whatsappUrl = canWhatsApp

@@ -11,9 +11,10 @@ import {
 import { CreationCard } from '@/components/CreationCard'
 import { CreationGalleryModal } from '@/components/CreationGalleryModal'
 import { DocumentMeta } from '@/components/DocumentMeta'
+import { atelierPublicToCard, fetchAtelier } from '@/lib/api/atelier'
 import { listPublicCreationsByAtelierMerged } from '@/lib/catalogue'
 import { formatPhoneDisplay } from '@/lib/format'
-import { getAtelierById, type MockCreation } from '@/lib/mock-data'
+import type { MockAtelier, MockCreation } from '@/lib/mock-data'
 import {
   absoluteUrl,
   atelierWhatsAppMessage,
@@ -23,24 +24,67 @@ import {
 
 export function AtelierDetailPage() {
   const { id } = useParams()
-  const atelier = id ? getAtelierById(id) : undefined
+  const [atelier, setAtelier] = useState<MockAtelier | null>(null)
   const [creations, setCreations] = useState<MockCreation[]>([])
+  const [loading, setLoading] = useState(true)
   const [galleryOpen, setGalleryOpen] = useState(false)
   const [galleryIndex, setGalleryIndex] = useState(0)
 
   useEffect(() => {
     if (!id) {
+      setAtelier(null)
       setCreations([])
+      setLoading(false)
       return
     }
     let cancelled = false
-    void listPublicCreationsByAtelierMerged(id).then((items) => {
-      if (!cancelled) setCreations(items)
-    })
+    setLoading(true)
+    void (async () => {
+      try {
+        const [apiAtelier, items] = await Promise.all([
+          fetchAtelier(id),
+          listPublicCreationsByAtelierMerged(id),
+        ])
+        if (cancelled) return
+        const gallery = Array.from(
+          new Set(
+            items
+              .flatMap((item) => item.images ?? [item.image])
+              .filter(Boolean)
+              .slice(0, 9),
+          ),
+        )
+        const card = atelierPublicToCard(apiAtelier, {
+          creationsCount: items.length,
+          coverImage: items[0]?.image || gallery[0],
+        })
+        setAtelier({
+          ...card,
+          gallery: gallery.length > 0 ? gallery : card.gallery,
+        })
+        setCreations(items)
+      } catch {
+        if (!cancelled) {
+          setAtelier(null)
+          setCreations([])
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    })()
     return () => {
       cancelled = true
     }
   }, [id])
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-lg px-4 py-20 text-center">
+        <DocumentMeta title="Atelier" noIndex />
+        <p className="text-sm text-muted">Chargement du profil…</p>
+      </div>
+    )
+  }
 
   if (!atelier) {
     return (
@@ -120,11 +164,17 @@ export function AtelierDetailPage() {
             <Clock3 className="size-3.5 text-primary" aria-hidden />
             {atelier.horaires}
           </span>
-          <span className="inline-flex items-center gap-1.5 text-heading">
-            <Star className="size-3.5 fill-gold text-gold" aria-hidden />
-            {atelier.note.toFixed(1).replace('.', ',')}
-            <span className="text-muted">({atelier.avis})</span>
-          </span>
+          {atelier.avis > 0 ? (
+            <span className="inline-flex items-center gap-1.5 text-heading">
+              <Star className="size-3.5 fill-gold text-gold" aria-hidden />
+              {atelier.note.toFixed(1).replace('.', ',')}
+              <span className="text-muted">({atelier.avis})</span>
+            </span>
+          ) : (
+            <span className="rounded-full bg-ribbon px-2.5 py-0.5 text-[11px] font-semibold text-primary">
+              Nouveau sur Couturia
+            </span>
+          )}
         </div>
 
         {atelier.description ? (

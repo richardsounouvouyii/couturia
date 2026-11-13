@@ -4,7 +4,7 @@ import {
   type CreationPublic,
 } from '@/lib/api/catalogue'
 import { fetchAtelier, listAteliers } from '@/lib/api/atelier'
-import { MOCK_CREATIONS, type MockCreation } from '@/lib/mock-data'
+import type { MockCreation } from '@/lib/mock-data'
 import {
   getStylistCreation,
   listStylistCreations,
@@ -162,8 +162,6 @@ export function resolvePublicCreationById(id: string): MockCreation | undefined 
     const draft = getStylistCreation(id)
     return draft?.published ? stylistDraftToMock(draft) : undefined
   }
-  const fromMock = MOCK_CREATIONS.find((item) => item.id === id)
-  if (fromMock) return fromMock
   const draft = getStylistCreation(id)
   return draft?.published ? stylistDraftToMock(draft) : undefined
 }

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -19,6 +19,7 @@ import { fetchAtelierByOwner } from '@/lib/api/atelier'
 import {
   createCreation,
   ensureCategory,
+  listCategories,
   uploadCreationImages,
 } from '@/lib/api/catalogue'
 import { ApiError } from '@/lib/api/http'
@@ -36,12 +37,20 @@ import {
   type StylistPhoto,
 } from '@/lib/stylist-creations'
 
-const categoryChoices = MOCK_CATEGORIES.filter((c) => c.id !== 'tous')
-const categoryOptions = categoryChoices.map((c) => c.label)
+const FALLBACK_CATEGORIES = MOCK_CATEGORIES.filter((c) => c.id !== 'tous').map((c) => ({
+  slug: c.id,
+  nom: c.label,
+}))
 
-function categorySlugFromLabel(label: string): string {
-  return categoryChoices.find((c) => c.label === label)?.id ?? 'robes'
+function slugifyCategory(label: string): string {
+  return label
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '') || 'creation'
 }
+
 const SUGGESTED_ANGLES: PhotoAngle[] = ['face', 'cote', 'dos', 'cote', 'detail']
 
 const fieldClass =
@@ -67,8 +76,16 @@ export function StylistCreationFormPage() {
     user?.fullName?.trim() ||
     STYLIST_DEMO.atelierName
 
+  const [categoryOptions, setCategoryOptions] = useState(
+    FALLBACK_CATEGORIES.map((c) => c.nom),
+  )
+  const [categorySlugByLabel, setCategorySlugByLabel] = useState<Record<string, string>>(
+    Object.fromEntries(FALLBACK_CATEGORIES.map((c) => [c.nom, c.slug])),
+  )
   const [titre, setTitre] = useState(existing?.titre ?? '')
-  const [categorie, setCategorie] = useState(existing?.categorie ?? categoryOptions[0])
+  const [categorie, setCategorie] = useState(
+    existing?.categorie ?? FALLBACK_CATEGORIES[0]?.nom ?? 'Robes',
+  )
   const [ville, setVille] = useState(existing?.ville ?? user?.ville ?? 'Cotonou')
   const [prix, setPrix] = useState(
     existing?.prixIndicatif != null ? String(existing.prixIndicatif) : '',
@@ -80,6 +97,27 @@ export function StylistCreationFormPage() {
   const [imageError, setImageError] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    void listCategories()
+      .then((items) => {
+        if (cancelled || items.length === 0) return
+        const labels = items.map((item) => item.nom)
+        const slugs = Object.fromEntries(items.map((item) => [item.nom, item.slug]))
+        setCategoryOptions(labels)
+        setCategorySlugByLabel(slugs)
+        setCategorie((current) =>
+          labels.includes(current) ? current : labels[0] ?? current,
+        )
+      })
+      .catch(() => {
+        // garde les catégories de secours
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const images = useMemo(() => photos.map((photo) => photo.src), [photos])
   const is360 = photos.length >= TURN_360_MIN_FRAMES
@@ -219,7 +257,7 @@ export function StylistCreationFormPage() {
       if (!catalogueId) {
         const atelierId = await resolveAtelierId()
         const category = await ensureCategory({
-          slug: categorySlugFromLabel(categorie),
+          slug: categorySlugByLabel[categorie] || slugifyCategory(categorie),
           nom: categorie,
         })
         const created = await createCreation({

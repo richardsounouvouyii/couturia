@@ -36,11 +36,26 @@ export async function apiRequest<T>(
     headers.Authorization = `Bearer ${options.token}`
   }
 
-  const response = await fetch(`${baseUrl}${path}`, {
-    method: options.method ?? 'GET',
-    headers,
-    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
-  })
+  const controller = new AbortController()
+  const timeoutMs = 20_000
+  const timer = window.setTimeout(() => controller.abort(), timeoutMs)
+
+  let response: Response
+  try {
+    response = await fetch(`${baseUrl}${path}`, {
+      method: options.method ?? 'GET',
+      headers,
+      body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+      signal: controller.signal,
+    })
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      throw new ApiError(408, 'Le serveur met trop de temps à répondre. Réessaie.')
+    }
+    throw err
+  } finally {
+    window.clearTimeout(timer)
+  }
 
   if (!response.ok) {
     let message = `Erreur ${response.status}`
