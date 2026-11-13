@@ -21,12 +21,13 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=settings.cors_origin_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 app.include_router(api_router)
-# Fichiers uploadés : http://localhost:8003/media/<fichier>
-app.mount("/media", StaticFiles(directory=str(media_root())), name="media")
+# Disque local uniquement (en prod Cloudinary, pas de /media servi ici)
+if not settings.cloudinary_enabled:
+    app.mount("/media", StaticFiles(directory=str(media_root())), name="media")

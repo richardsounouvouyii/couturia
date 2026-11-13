@@ -18,4 +18,4 @@ RUN pip install --no-cache-dir -e .
 
 EXPOSE 8001
 
-CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${AUTH_SERVICE_PORT:-8001}"]
+CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-${AUTH_SERVICE_PORT:-8001}}"]

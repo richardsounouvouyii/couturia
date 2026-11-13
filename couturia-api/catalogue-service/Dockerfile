@@ -14,4 +14,4 @@ RUN pip install --no-cache-dir -e .
 
 EXPOSE 8003
 
-CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${CATALOGUE_SERVICE_PORT:-8003}"]
+CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-${CATALOGUE_SERVICE_PORT:-8003}}"]
