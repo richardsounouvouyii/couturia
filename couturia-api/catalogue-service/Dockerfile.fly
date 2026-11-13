@@ -1,4 +1,5 @@
-# Build context = dossier du service (fly.toml ici)
+# Contexte de build Fly = racine du monorepo
+# (deploy avec --config couturia-api/catalogue-service/fly.toml)
 FROM python:3.12-slim
 
 WORKDIR /app
@@ -6,10 +7,10 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
-COPY pyproject.toml README.md ./
-COPY app ./app
-COPY alembic.ini ./
-COPY alembic ./alembic
+COPY couturia-api/catalogue-service/pyproject.toml couturia-api/catalogue-service/README.md ./
+COPY couturia-api/catalogue-service/app ./app
+COPY couturia-api/catalogue-service/alembic.ini ./
+COPY couturia-api/catalogue-service/alembic ./alembic
 
 RUN pip install --no-cache-dir -e .
 
