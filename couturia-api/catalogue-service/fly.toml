@@ -1,9 +1,12 @@
-# fly.toml — couturia-catalogue
+# fly.toml app configuration file generated for couturia-catalogue on 2026-11-13T15:47:44Z
+#
+# See https://docs.fly.io/reference/configuration for information about how to use this file.
+#
+
 app = 'couturia-catalogue'
 primary_region = 'ams'
 
 [build]
-  # Relatif au dossier du fly.toml ; le contexte de build reste la racine du repo
   dockerfile = 'Dockerfile.fly'
 
 [http_service]
