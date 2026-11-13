@@ -1,6 +1,11 @@
 import { Route, Routes } from 'react-router-dom'
+import { RequireStaff } from '@/components/RequireStaff'
 import { RequireStylist } from '@/components/RequireStylist'
+import { AdminLayout } from '@/layouts/AdminLayout'
 import { PublicLayout } from '@/layouts/PublicLayout'
+import { AdminCarouselPage } from '@/pages/admin/AdminCarouselPage'
+import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage'
+import { AdminPlaceholderPage } from '@/pages/admin/AdminPlaceholderPage'
 import { AtelierDetailPage } from '@/pages/AtelierDetailPage'
 import { AteliersPage } from '@/pages/AteliersPage'
 import { CreationDetailPage } from '@/pages/CreationDetailPage'
@@ -17,6 +22,59 @@ import { StylistCreationsPage } from '@/pages/styliste/StylistCreationsPage'
 export function AppRoutes() {
   return (
     <Routes>
+      <Route
+        path="/admin"
+        element={
+          <RequireStaff>
+            <AdminLayout />
+          </RequireStaff>
+        }
+      >
+        <Route index element={<AdminDashboardPage />} />
+        <Route path="publicites" element={<AdminCarouselPage />} />
+        <Route
+          path="utilisateurs"
+          element={<AdminPlaceholderPage title="Utilisateurs" />}
+        />
+        <Route
+          path="stylistes"
+          element={<AdminPlaceholderPage title="Couturières & Stylistes" />}
+        />
+        <Route path="clients" element={<AdminPlaceholderPage title="Clients" />} />
+        <Route
+          path="creations"
+          element={<AdminPlaceholderPage title="Créations" />}
+        />
+        <Route
+          path="categories"
+          element={<AdminPlaceholderPage title="Catégories" />}
+        />
+        <Route
+          path="commandes"
+          element={<AdminPlaceholderPage title="Commandes" />}
+        />
+        <Route
+          path="demandes"
+          element={<AdminPlaceholderPage title="Demandes" />}
+        />
+        <Route
+          path="avis"
+          element={<AdminPlaceholderPage title="Avis & Signalements" />}
+        />
+        <Route
+          path="pages-accueil"
+          element={<AdminPlaceholderPage title="Pages d'accueil" />}
+        />
+        <Route
+          path="messages"
+          element={<AdminPlaceholderPage title="Messages / Notifications" />}
+        />
+        <Route
+          path="parametres"
+          element={<AdminPlaceholderPage title="Paramètres" />}
+        />
+      </Route>
+
       <Route element={<PublicLayout />}>
         <Route index element={<HomePage />} />
         <Route path="catalogue" element={<CreationsPage />} />

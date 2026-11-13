@@ -50,7 +50,13 @@ export function LoginPage() {
 
       // signIn écrase la session précédente (token + rôle)
       signIn(user, result.access_token)
-      navigate(user.role === 'styliste' ? '/espace-styliste' : '/catalogue')
+      const dest =
+        user.role === 'admin' || user.role === 'super_admin'
+          ? '/admin'
+          : user.role === 'styliste'
+            ? '/espace-styliste'
+            : '/catalogue'
+      navigate(dest)
     } catch (err) {
       if (err instanceof ApiError) {
         setError(
