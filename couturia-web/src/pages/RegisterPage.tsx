@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { Eye, EyeOff, Scissors, UserRound } from 'lucide-react'
+import { Eye, EyeOff, Loader2, Scissors, UserRound } from 'lucide-react'
 import { AuthRoleToggle } from '@/components/AuthRoleToggle'
 import { DocumentMeta } from '@/components/DocumentMeta'
 import { createAtelier } from '@/lib/api/atelier'
@@ -238,11 +238,18 @@ export function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="btn btn-primary btn-sm mt-4 h-10 w-full gap-2 rounded-xl"
+            aria-busy={loading}
+            className="btn btn-primary btn-sm mt-4 h-10 w-full gap-2 rounded-xl disabled:cursor-wait disabled:opacity-90"
           >
-            {isStylist ? <Scissors className="size-4" /> : <UserRound className="size-4" />}
+            {loading ? (
+              <Loader2 className="size-4 animate-spin" aria-hidden />
+            ) : isStylist ? (
+              <Scissors className="size-4" aria-hidden />
+            ) : (
+              <UserRound className="size-4" aria-hidden />
+            )}
             {loading
-              ? 'Création…'
+              ? 'Création en cours…'
               : isStylist
                 ? 'Créer ma vitrine'
                 : 'Créer mon compte'}

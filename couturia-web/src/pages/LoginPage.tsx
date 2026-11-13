@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { Eye, EyeOff, LogIn } from 'lucide-react'
+import { Eye, EyeOff, Loader2, LogIn } from 'lucide-react'
 import { AuthRoleToggle } from '@/components/AuthRoleToggle'
 import { DocumentMeta } from '@/components/DocumentMeta'
 import { enrichAuthWithAtelier } from '@/lib/api/atelier'
@@ -160,10 +160,15 @@ export function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="btn btn-primary btn-sm mt-4 h-10 w-full gap-2 rounded-xl"
+            aria-busy={loading}
+            className="btn btn-primary btn-sm mt-4 h-10 w-full gap-2 rounded-xl disabled:cursor-wait disabled:opacity-90"
           >
-            <LogIn className="size-4" />
-            {loading ? 'Connexion…' : 'Se connecter'}
+            {loading ? (
+              <Loader2 className="size-4 animate-spin" aria-hidden />
+            ) : (
+              <LogIn className="size-4" aria-hidden />
+            )}
+            {loading ? 'Connexion en cours…' : 'Se connecter'}
           </button>
         </form>
 
