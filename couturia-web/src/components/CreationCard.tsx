@@ -88,16 +88,16 @@ export function CreationCard({ creation, hideAtelier = false }: Props) {
         </p>
 
         <div className="flex min-w-0 flex-col gap-0.5 pt-0.5 text-[11px] sm:flex-row sm:items-center sm:justify-between sm:gap-1.5 sm:text-xs">
-          {creation.ratingsDemo ? (
-            <span className="w-fit max-w-full truncate rounded-full bg-ribbon px-2 py-0.5 text-[10px] font-semibold text-primary">
-              Nouveau
-            </span>
-          ) : (
+          {creation.avis > 0 && !creation.ratingsDemo ? (
             <span className="inline-flex min-w-0 items-center gap-1 text-heading/80">
               <Star className="size-3 shrink-0 fill-gold text-gold" aria-hidden />
               <span className="truncate">
                 {creation.note.toFixed(1).replace('.', ',')} ({creation.avis})
               </span>
+            </span>
+          ) : (
+            <span className="w-fit max-w-full truncate rounded-full bg-ribbon px-2 py-0.5 text-[10px] font-semibold text-primary">
+              Nouveau
             </span>
           )}
           {creation.prixIndicatif != null ? (

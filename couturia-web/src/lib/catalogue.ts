@@ -83,7 +83,8 @@ export function apiCreationToMock(
     description: item.description ?? undefined,
     telephoneWhatsapp: extras?.phone,
     updatedAt: item.created_at,
-    ratingsDemo: true,
+    // Créations API réelles : pas de badge « démo »
+    ratingsDemo: false,
   }
 }
 

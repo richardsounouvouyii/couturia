@@ -202,14 +202,14 @@ export function CreationDetailPage() {
                   </a>
                 </p>
               ) : null}
-              {creation.ratingsDemo ? (
-                <span className="inline-flex rounded-full bg-ribbon px-2 py-0.5 text-[10px] font-semibold text-primary">
-                  Nouvelle publication · démo
-                </span>
-              ) : (
+              {creation.avis > 0 && !creation.ratingsDemo ? (
                 <span className="inline-flex items-center gap-1.5 text-heading">
                   <Star className="size-3.5 fill-gold text-gold sm:size-4" aria-hidden />
                   {creation.note.toFixed(1).replace('.', ',')} ({creation.avis} avis)
+                </span>
+              ) : (
+                <span className="inline-flex rounded-full bg-ribbon px-2 py-0.5 text-[10px] font-semibold text-primary">
+                  Nouveau
                 </span>
               )}
             </div>
