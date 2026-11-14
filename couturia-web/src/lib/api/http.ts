@@ -37,7 +37,8 @@ export async function apiRequest<T>(
   }
 
   const controller = new AbortController()
-  const timeoutMs = 20_000
+  // Fly peut éteindre les machines : cold start + Neon ≈ 20–40s parfois
+  const timeoutMs = 45_000
   const timer = window.setTimeout(() => controller.abort(), timeoutMs)
 
   let response: Response
@@ -50,7 +51,10 @@ export async function apiRequest<T>(
     })
   } catch (err) {
     if (err instanceof DOMException && err.name === 'AbortError') {
-      throw new ApiError(408, 'Le serveur met trop de temps à répondre. Réessaie.')
+      throw new ApiError(
+        408,
+        'Le serveur démarre (cold start). Réessaie dans quelques secondes.',
+      )
     }
     throw err
   } finally {

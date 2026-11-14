@@ -61,7 +61,7 @@ export function LoginPage() {
       if (err instanceof ApiError) {
         setError(
           err.status === 408
-            ? 'Le serveur met trop de temps à répondre. Réessaie dans un instant.'
+            ? 'Le serveur démarre (cold start). Réessaie dans quelques secondes.'
             : err.message,
         )
       } else {
