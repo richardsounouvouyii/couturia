@@ -37,7 +37,11 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
   )
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(ids))
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(ids))
+    } catch {
+      // Quota / mode privé : on garde l’état mémoire sans planter l’UI
+    }
   }, [ids])
 
   const isFavorite = useCallback((id: string) => ids.includes(id), [ids])

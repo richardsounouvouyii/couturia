@@ -1,16 +1,54 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Heart } from 'lucide-react'
+import { Heart, Loader2 } from 'lucide-react'
 import { CreationCard } from '@/components/CreationCard'
 import { DocumentMeta } from '@/components/DocumentMeta'
-import { resolvePublicCreationById } from '@/lib/catalogue'
+import { resolvePublicCreationByIdAsync } from '@/lib/catalogue'
 import { useFavorites } from '@/lib/favorites'
 import type { MockCreation } from '@/lib/mock-data'
 
 export function FavorisPage() {
   const { ids } = useFavorites()
-  const favorites = ids
-    .map((id) => resolvePublicCreationById(id))
-    .filter((item): item is MockCreation => item != null)
+  const [favorites, setFavorites] = useState<MockCreation[]>([])
+  const [loading, setLoading] = useState(ids.length > 0)
+  const [missingCount, setMissingCount] = useState(0)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function load() {
+      if (ids.length === 0) {
+        setFavorites([])
+        setMissingCount(0)
+        setLoading(false)
+        return
+      }
+
+      setLoading(true)
+      try {
+        const resolved = await Promise.all(
+          ids.map(async (id) => ({
+            id,
+            creation: await resolvePublicCreationByIdAsync(id),
+          })),
+        )
+        if (cancelled) return
+
+        const items = resolved
+          .map((row) => row.creation)
+          .filter((item): item is MockCreation => item != null)
+        setFavorites(items)
+        setMissingCount(resolved.length - items.length)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    void load()
+    return () => {
+      cancelled = true
+    }
+  }, [ids])
 
   return (
     <div className="bg-page">
@@ -35,31 +73,46 @@ export function FavorisPage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-6 lg:px-8 lg:py-8">
-        {favorites.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center gap-2 rounded-2xl border border-line bg-white px-6 py-16 text-sm text-muted">
+            <Loader2 className="size-4 animate-spin" aria-hidden />
+            Chargement de vos favoris…
+          </div>
+        ) : favorites.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-line bg-white px-6 py-16 text-center">
             <Heart className="mx-auto size-8 text-gold" aria-hidden />
             <p className="font-display mt-3 text-xl font-semibold text-primary">
               Aucun favori pour le moment
             </p>
             <p className="mt-2 text-sm text-muted">
-              Touchez le cœur sur une création pour l&apos;enregistrer ici.
+              {missingCount > 0
+                ? `${missingCount} favori${missingCount > 1 ? 's' : ''} enregistré${missingCount > 1 ? 's' : ''} mais introuvable${missingCount > 1 ? 's' : ''} dans le catalogue.`
+                : 'Touchez le cœur sur une création pour l’enregistrer ici.'}
             </p>
             <Link to="/catalogue" className="btn btn-primary btn-sm mt-6 rounded-xl">
               Explorer les créations
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 lg:gap-5">
-            {favorites.map((creation) => (
-              <Link
-                key={creation.id}
-                to={`/catalogue/${creation.id}`}
-                className="block transition hover:-translate-y-0.5"
-              >
-                <CreationCard creation={creation} />
-              </Link>
-            ))}
-          </div>
+          <>
+            {missingCount > 0 ? (
+              <p className="mb-3 text-xs text-muted">
+                {missingCount} favori{missingCount > 1 ? 's' : ''} introuvable
+                {missingCount > 1 ? 's' : ''} (création retirée ou indisponible).
+              </p>
+            ) : null}
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 lg:gap-5">
+              {favorites.map((creation) => (
+                <Link
+                  key={creation.id}
+                  to={`/catalogue/${creation.id}`}
+                  className="block transition hover:-translate-y-0.5"
+                >
+                  <CreationCard creation={creation} />
+                </Link>
+              ))}
+            </div>
+          </>
         )}
       </section>
     </div>
