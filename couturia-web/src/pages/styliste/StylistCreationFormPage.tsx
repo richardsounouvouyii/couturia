@@ -67,7 +67,12 @@ export function StylistCreationFormPage() {
   const { user, token } = useAuthSession()
   const galleryInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
-  const existing = id ? getStylistCreation(id) : undefined
+  const existing = id
+    ? getStylistCreation(id, {
+        ownerUserId: user?.id,
+        atelierId: user?.atelierId,
+      })
+    : undefined
   const isEdit = Boolean(existing)
 
   const atelierName =
@@ -295,6 +300,8 @@ export function StylistCreationFormPage() {
         categorie,
         ville: ville.trim(),
         atelier: atelierName,
+        atelierId: user?.atelierId || (await resolveAtelierId()),
+        ownerUserId: user?.id,
         prixIndicatif: prixNumber,
         description: description.trim(),
         photos: photosOnServer,

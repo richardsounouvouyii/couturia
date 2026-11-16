@@ -211,8 +211,13 @@ export async function listPublicCreationsByAtelierMerged(
 /** Créations API d’un atelier styliste (+ photos locales si présentes). */
 export async function listAtelierCreationsMerged(
   atelierId: string,
+  options?: { ownerUserId?: string },
 ): Promise<MockCreation[]> {
-  const local = listStylistCreations()
+  // Isolation : uniquement les brouillons locaux de CET atelier / compte.
+  const local = listStylistCreations({
+    atelierId,
+    ownerUserId: options?.ownerUserId,
+  })
   const localByCatalogueId = new Map(
     local
       .filter((item) => item.catalogueId)

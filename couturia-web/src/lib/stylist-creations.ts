@@ -25,6 +25,10 @@ export type StylistCreationDraft = {
   categorie: string
   ville: string
   atelier: string
+  /** Atelier API du styliste propriétaire (isolation multi-comptes). */
+  atelierId?: string
+  /** Compte auth propriétaire du brouillon local. */
+  ownerUserId?: string
   prixIndicatif: number | null
   description: string
   /** Photos avec angle optionnel — la 1re sert de couverture. */
@@ -37,6 +41,11 @@ export type StylistCreationDraft = {
   catalogueId?: string
   published: boolean
   updatedAt: string
+}
+
+export type StylistCreationsFilter = {
+  ownerUserId?: string
+  atelierId?: string
 }
 
 function parseAngle(value: unknown): PhotoAngle {
@@ -90,6 +99,14 @@ function normalize(
       typeof item.atelier === 'string' && item.atelier.trim()
         ? item.atelier
         : DEMO_ATELIER_NAME,
+    atelierId:
+      typeof item.atelierId === 'string' && item.atelierId.trim()
+        ? item.atelierId.trim()
+        : undefined,
+    ownerUserId:
+      typeof item.ownerUserId === 'string' && item.ownerUserId.trim()
+        ? item.ownerUserId.trim()
+        : undefined,
     prixIndicatif:
       typeof item.prixIndicatif === 'number' || item.prixIndicatif === null
         ? item.prixIndicatif
@@ -109,6 +126,22 @@ function normalize(
     updatedAt:
       typeof item.updatedAt === 'string' ? item.updatedAt : new Date().toISOString(),
   }
+}
+
+function matchesFilter(
+  item: StylistCreationDraft,
+  filter?: StylistCreationsFilter,
+): boolean {
+  if (!filter) return true
+  if (filter.ownerUserId) {
+    // Anciens brouillons sans owner : exclus dès qu’on filtre par compte
+    // (évite de voir les créations d’un autre styliste sur le même navigateur).
+    if (item.ownerUserId !== filter.ownerUserId) return false
+  }
+  if (filter.atelierId) {
+    if (item.atelierId !== filter.atelierId) return false
+  }
+  return true
 }
 
 function readAll(): StylistCreationDraft[] {
@@ -137,12 +170,14 @@ function writeAll(items: StylistCreationDraft[]) {
   }
 }
 
-export function listStylistCreations() {
-  return readAll().sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+export function listStylistCreations(filter?: StylistCreationsFilter) {
+  return readAll()
+    .filter((item) => matchesFilter(item, filter))
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
 }
 
-export function getStylistCreation(id: string) {
-  return readAll().find((item) => item.id === id)
+export function getStylistCreation(id: string, filter?: StylistCreationsFilter) {
+  return listStylistCreations(filter).find((item) => item.id === id)
 }
 
 export function saveStylistCreation(
@@ -161,6 +196,8 @@ export function saveStylistCreation(
               ...item,
               ...input,
               id: input.id,
+              atelierId: input.atelierId ?? item.atelierId,
+              ownerUserId: input.ownerUserId ?? item.ownerUserId,
               photos,
               images: photos.map((photo) => photo.src),
               updatedAt: now,
@@ -180,6 +217,8 @@ export function saveStylistCreation(
       categorie: input.categorie,
       ville: input.ville,
       atelier: input.atelier,
+      atelierId: input.atelierId,
+      ownerUserId: input.ownerUserId,
       prixIndicatif: input.prixIndicatif,
       description: input.description,
       photos,
@@ -214,7 +253,7 @@ export function stylistDraftToMock(draft: StylistCreationDraft): MockCreation {
   return {
     id: draft.id,
     titre: draft.titre,
-    atelierId: DEMO_ATELIER_ID,
+    atelierId: draft.atelierId || DEMO_ATELIER_ID,
     atelier: draft.atelier || DEMO_ATELIER_NAME,
     categorie: draft.categorie,
     ville: draft.ville,

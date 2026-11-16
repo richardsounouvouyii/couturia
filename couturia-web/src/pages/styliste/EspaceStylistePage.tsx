@@ -26,7 +26,7 @@ export function EspaceStylistePage() {
     }
     let cancelled = false
     setLoading(true)
-    void listAtelierCreationsMerged(user.atelierId)
+    void listAtelierCreationsMerged(user.atelierId, { ownerUserId: user.id })
       .then((items) => {
         if (!cancelled) setCreations(items)
       })
@@ -36,7 +36,7 @@ export function EspaceStylistePage() {
     return () => {
       cancelled = true
     }
-  }, [user?.atelierId])
+  }, [user?.atelierId, user?.id])
 
   return (
     <div className="bg-page">

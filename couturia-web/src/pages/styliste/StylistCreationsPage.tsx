@@ -23,17 +23,19 @@ export function StylistCreationsPage() {
 
     async function load() {
       if (user?.atelierId) {
-        const items = await listAtelierCreationsMerged(user.atelierId)
+        const items = await listAtelierCreationsMerged(user.atelierId, {
+          ownerUserId: user.id,
+        })
         if (!cancelled) setCreations(items)
       } else {
         if (!cancelled) {
           setCreations(
-            listStylistCreations()
+            listStylistCreations({ ownerUserId: user?.id })
               .filter((item) => item.published)
               .map((item) => ({
                 id: item.id,
                 titre: item.titre,
-                atelierId: 'local',
+                atelierId: item.atelierId || 'local',
                 atelier: item.atelier,
                 categorie: item.categorie,
                 ville: item.ville,
@@ -57,7 +59,7 @@ export function StylistCreationsPage() {
     return () => {
       cancelled = true
     }
-  }, [user?.atelierId, tick])
+  }, [user?.atelierId, user?.id, tick])
 
   return (
     <div className="bg-page">
@@ -109,7 +111,10 @@ export function StylistCreationsPage() {
         ) : (
           <ul className="space-y-3">
             {creations.map((item) => {
-              const localId = listStylistCreations().find(
+              const localId = listStylistCreations({
+                ownerUserId: user?.id,
+                atelierId: user?.atelierId,
+              }).find(
                 (draft) => draft.catalogueId === item.id || draft.id === item.id,
               )?.id
               const canEdit = Boolean(localId)
