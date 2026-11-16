@@ -1,0 +1,44 @@
+# Contexte Fly = racine du monorepo.
+# But : n’envoyer que ce dont les Dockerfile.fly ont besoin.
+
+# Git / IDE / OS
+.git
+.github
+.idea
+.vscode
+**/.DS_Store
+**/Thumbs.db
+
+# Front (jamais dans les images API)
+couturia-web
+
+# Infra locale / docs (hors image)
+docker
+docs
+
+# Secrets & fichiers locaux
+.env
+.env.*
+!.env.example
+body.txt
+body2.txt
+*.pem
+*.log
+
+# Python / tests lourds
+**/.venv
+**/venv
+**/__pycache__
+**/*.py[cod]
+**/*.egg-info
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+**/.coverage
+**/htmlcov
+**/dist
+**/build
+**/media
+
+# Node (au cas où)
+**/node_modules

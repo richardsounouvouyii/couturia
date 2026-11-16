@@ -27,6 +27,11 @@ class Settings(BaseSettings):
     cloudinary_folder: str = "couturia/creations"
     # Origines front autorisées, séparées par des virgules
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+    # Même secret que auth-service (vérif JWT locale, sans appeler auth)
+    auth_jwt_secret: str = "change-me-in-production-use-a-long-random-string"
+    auth_jwt_algorithm: str = "HS256"
+    # Pour vérifier que l’atelier_id appartient au styliste connecté
+    atelier_service_url: str = "http://localhost:8002"
 
     @property
     def cors_origin_list(self) -> list[str]:

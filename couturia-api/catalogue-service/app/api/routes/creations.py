@@ -2,7 +2,8 @@ from uuid import UUID
 
 from fastapi import APIRouter, Query
 
-from app.api.deps import DbSession
+from app.api.deps import DbSession, PublisherUser
+from app.atelier_client import assert_user_owns_atelier
 from app.schemas.creation import CreationCreate, CreationPublic
 from app.services.catalogue_service import CatalogueService
 
@@ -17,6 +18,7 @@ def list_creations(
     ville: str | None = Query(default=None),
     q: str | None = Query(default=None),
 ) -> list[CreationPublic]:
+    """Public — catalogue consultable sans compte."""
     return CatalogueService(db).list_creations(
         category_id=category_id,
         atelier_id=atelier_id,
@@ -27,9 +29,20 @@ def list_creations(
 
 @router.get("/{creation_id}", response_model=CreationPublic)
 def get_creation(creation_id: UUID, db: DbSession) -> CreationPublic:
+    """Public — détail d’une création."""
     return CatalogueService(db).get_creation(creation_id)
 
 
 @router.post("", response_model=CreationPublic, status_code=201)
-def create_creation(payload: CreationCreate, db: DbSession) -> CreationPublic:
+def create_creation(
+    payload: CreationCreate,
+    db: DbSession,
+    publisher: PublisherUser,
+) -> CreationPublic:
+    """Protégé — styliste propriétaire de l’atelier (ou staff)."""
+    if not publisher.is_staff:
+        assert_user_owns_atelier(
+            user_id=publisher.id,
+            atelier_id=payload.atelier_id,
+        )
     return CatalogueService(db).create_creation(payload)

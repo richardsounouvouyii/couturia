@@ -64,7 +64,7 @@ function suggestedAngleForIndex(index: number, totalHint: number): PhotoAngle {
 export function StylistCreationFormPage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { user } = useAuthSession()
+  const { user, token } = useAuthSession()
   const galleryInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
   const existing = id ? getStylistCreation(id) : undefined
@@ -242,36 +242,50 @@ export function StylistCreationFormPage() {
       return
     }
 
+    if (!token) {
+      setImageError('Session expirée. Reconnectez-vous pour publier.')
+      return
+    }
+
     setSaving(true)
     setImageError(null)
     try {
       let catalogueId = existing?.catalogueId
       // 1) Upload photos → URLs publiques (visibles par tous)
-      const uploadedUrls = await uploadCreationImages(photos.map((photo) => photo.src))
+      const uploadedUrls = await uploadCreationImages(
+        photos.map((photo) => photo.src),
+        token,
+      )
       const photosOnServer = photos.map((photo, index) => ({
         ...photo,
         src: uploadedUrls[index] || photo.src,
       }))
 
-      // 2) Nouvelle création → POST catalogue-service
+      // 2) Nouvelle création → POST catalogue-service (JWT + propriété atelier)
       if (!catalogueId) {
         const atelierId = await resolveAtelierId()
-        const category = await ensureCategory({
-          slug: categorySlugByLabel[categorie] || slugifyCategory(categorie),
-          nom: categorie,
-        })
-        const created = await createCreation({
-          atelier_id: atelierId,
-          category_id: category.id,
-          titre: titre.trim(),
-          description: description.trim(),
-          prix_indicatif: prixNumber,
-          ville: ville.trim(),
-          image_url: uploadedUrls[0],
-          images: uploadedUrls,
-          status: 'publiee',
-          is_public: true,
-        })
+        const category = await ensureCategory(
+          {
+            slug: categorySlugByLabel[categorie] || slugifyCategory(categorie),
+            nom: categorie,
+          },
+          token,
+        )
+        const created = await createCreation(
+          {
+            atelier_id: atelierId,
+            category_id: category.id,
+            titre: titre.trim(),
+            description: description.trim(),
+            prix_indicatif: prixNumber,
+            ville: ville.trim(),
+            image_url: uploadedUrls[0],
+            images: uploadedUrls,
+            status: 'publiee',
+            is_public: true,
+          },
+          token,
+        )
         catalogueId = created.id
       }
 

@@ -104,6 +104,7 @@ services:
       CATALOGUE_SERVICE_PORT: "8003"
       CATALOGUE_MEDIA_ROOT: /app/media
       CATALOGUE_PUBLIC_URL: http://localhost:8003
+      ATELIER_SERVICE_URL: http://atelier-service:8002
     ports:
       - "${CATALOGUE_SERVICE_PORT:-8003}:8003"
     volumes:
@@ -112,6 +113,8 @@ services:
       postgres:
         condition: service_healthy
       rabbitmq:
+        condition: service_healthy
+      atelier-service:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8003/health')"]

@@ -58,14 +58,18 @@ export function listCategories(): Promise<CategoryPublic[]> {
   return apiRequest<CategoryPublic[]>(requireCatalogueBaseUrl(), '/api/categories')
 }
 
-/** POST /api/categories */
-export function createCategory(input: {
-  slug: string
-  nom: string
-}): Promise<CategoryPublic> {
+/** POST /api/categories — JWT styliste / staff requis. */
+export function createCategory(
+  input: {
+    slug: string
+    nom: string
+  },
+  token: string,
+): Promise<CategoryPublic> {
   return apiRequest<CategoryPublic>(requireCatalogueBaseUrl(), '/api/categories', {
     method: 'POST',
     body: input,
+    token,
   })
 }
 
@@ -96,26 +100,31 @@ export function fetchCreation(creationId: string): Promise<CreationPublic> {
   )
 }
 
-/** POST /api/creations */
+/** POST /api/creations — JWT styliste propriétaire / staff requis. */
 export function createCreation(
   input: CreationCreateInput,
+  token: string,
 ): Promise<CreationPublic> {
   return apiRequest<CreationPublic>(requireCatalogueBaseUrl(), '/api/creations', {
     method: 'POST',
     body: input,
+    token,
   })
 }
 
 /** Retrouve une catégorie par slug, ou la crée si absente. */
-export async function ensureCategory(input: {
-  slug: string
-  nom: string
-}): Promise<CategoryPublic> {
+export async function ensureCategory(
+  input: {
+    slug: string
+    nom: string
+  },
+  token: string,
+): Promise<CategoryPublic> {
   const existing = await listCategories()
   const found = existing.find((item) => item.slug === input.slug)
   if (found) return found
   try {
-    return await createCategory(input)
+    return await createCategory(input, token)
   } catch {
     // Course possible : recharger la liste
     const again = await listCategories()
@@ -134,8 +143,11 @@ function dataUrlToBlob(dataUrl: string): Blob {
   return new Blob([bytes], { type: mime })
 }
 
-/** POST /api/media/upload (multipart) → URLs publiques (ordre conservé). */
-export async function uploadCreationImages(sources: string[]): Promise<string[]> {
+/** POST /api/media/upload (multipart) → URLs publiques (ordre conservé). JWT requis. */
+export async function uploadCreationImages(
+  sources: string[],
+  token: string,
+): Promise<string[]> {
   if (sources.length === 0) {
     throw new Error('Aucune image à envoyer.')
   }
@@ -161,6 +173,9 @@ export async function uploadCreationImages(sources: string[]): Promise<string[]>
 
   const response = await fetch(`${requireCatalogueBaseUrl()}/api/media/upload`, {
     method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
     body: form,
   })
 
