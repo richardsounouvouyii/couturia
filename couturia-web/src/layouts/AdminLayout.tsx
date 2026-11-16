@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { Bell, LogOut, Menu, Search, X } from 'lucide-react'
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { Bell, ExternalLink, LogOut, Menu, Search, X } from 'lucide-react'
 import { DocumentMeta } from '@/components/DocumentMeta'
 import { useAuthSession } from '@/lib/auth-session'
 import { ADMIN_NAV } from '@/lib/admin-nav'
@@ -61,7 +61,15 @@ export function AdminLayout() {
         })}
       </nav>
 
-      <div className="border-t border-white/10 p-2">
+      <div className="space-y-0.5 border-t border-white/10 p-2">
+        <Link
+          to="/"
+          onClick={() => setMobileOpen(false)}
+          className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-[12px] font-medium text-white/80 transition hover:bg-white/10 hover:text-white"
+        >
+          <ExternalLink className="size-3.5" aria-hidden />
+          Retour à l&apos;application
+        </Link>
         <button
           type="button"
           onClick={onLogout}
